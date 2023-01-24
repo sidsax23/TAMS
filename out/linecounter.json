@@ -1,0 +1,1823 @@
+{
+    "extension": "linecounter",
+    "version": "0.2.7",
+    "workspace": "c:\\Users\\sidha\\tams",
+    "linecount": [
+        {
+            "version": "0.2.7",
+            "counttime": "2023-01-18 10:35:37",
+            "filesum": 131,
+            "codesum": 39323,
+            "commentsum": 312,
+            "blanksum": 998,
+            "statistics": {
+                ".js": {
+                    "code": 1210,
+                    "comment": 66,
+                    "blank": 243
+                },
+                ".svg": {
+                    "code": 1,
+                    "comment": 0,
+                    "blank": 0
+                },
+                ".jsx": {
+                    "code": 3579,
+                    "comment": 28,
+                    "blank": 523
+                },
+                ".css": {
+                    "code": 1291,
+                    "comment": 8,
+                    "blank": 163
+                },
+                ".tsx": {
+                    "code": 213,
+                    "comment": 164,
+                    "blank": 30
+                },
+                ".md": {
+                    "code": 21,
+                    "comment": 4,
+                    "blank": 15
+                },
+                ".csv": {
+                    "code": 6,
+                    "comment": 0,
+                    "blank": 0
+                },
+                ".txt": {
+                    "code": 4,
+                    "comment": 1,
+                    "blank": 0
+                },
+                ".json": {
+                    "code": 32130,
+                    "comment": 0,
+                    "blank": 5
+                },
+                "": {
+                    "code": 276,
+                    "comment": 17,
+                    "blank": 15
+                },
+                ".html": {
+                    "code": 20,
+                    "comment": 23,
+                    "blank": 0
+                },
+                ".ini": {
+                    "code": 3,
+                    "comment": 0,
+                    "blank": 0
+                },
+                ".xml": {
+                    "code": 67,
+                    "comment": 0,
+                    "blank": 4
+                },
+                ".setup": {
+                    "code": 6,
+                    "comment": 0,
+                    "blank": 0
+                },
+                ".log": {
+                    "code": 4,
+                    "comment": 0,
+                    "blank": 0
+                },
+                ".prefs": {
+                    "code": 35,
+                    "comment": 1,
+                    "blank": 0
+                },
+                ".xmi": {
+                    "code": 455,
+                    "comment": 0,
+                    "blank": 0
+                },
+                ".version": {
+                    "code": 2,
+                    "comment": 0,
+                    "blank": 0
+                }
+            },
+            "filelist": [
+                {
+                    "blank": 6,
+                    "code": 20,
+                    "comment": 17,
+                    "filename": ".gitignore"
+                },
+                {
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0,
+                    "filename": ".metadata\\.lock"
+                },
+                {
+                    "blank": 9,
+                    "code": 240,
+                    "comment": 0,
+                    "filename": ".metadata\\.log"
+                },
+                {
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.resources\\.projects\\.org.eclipse.egit.core.cmp\\.location",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.resources\\.root\\.indexes\\history.version"
+                },
+                {
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.resources\\.root\\.indexes\\properties.index",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.resources\\.root\\.indexes\\properties.version"
+                },
+                {
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.resources\\.root\\4.tree",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.resources\\.safetable\\org.eclipse.core.resources",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 0,
+                    "code": 3,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.runtime\\.settings\\org.eclipse.core.resources.prefs"
+                },
+                {
+                    "blank": 0,
+                    "code": 8,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.runtime\\.settings\\org.eclipse.jdt.ui.prefs"
+                },
+                {
+                    "blank": 0,
+                    "code": 2,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.runtime\\.settings\\org.eclipse.jsch.core.prefs"
+                },
+                {
+                    "blank": 0,
+                    "code": 2,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.runtime\\.settings\\org.eclipse.m2e.discovery.prefs"
+                },
+                {
+                    "blank": 0,
+                    "code": 2,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.runtime\\.settings\\org.eclipse.ui.browser.prefs"
+                },
+                {
+                    "blank": 0,
+                    "code": 4,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.runtime\\.settings\\org.eclipse.ui.ide.prefs"
+                },
+                {
+                    "blank": 0,
+                    "code": 2,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.runtime\\.settings\\org.eclipse.ui.prefs"
+                },
+                {
+                    "blank": 0,
+                    "code": 8,
+                    "comment": 1,
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.runtime\\.settings\\org.eclipse.ui.workbench.prefs"
+                },
+                {
+                    "blank": 0,
+                    "code": 2,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.runtime\\.settings\\org.eclipse.urischeme.prefs"
+                },
+                {
+                    "blank": 0,
+                    "code": 455,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.e4.workbench\\workbench.xmi"
+                },
+                {
+                    "blank": 0,
+                    "code": 11,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.egit.core\\.org.eclipse.egit.core.cmp\\.project"
+                },
+                {
+                    "blank": 0,
+                    "code": 2,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.egit.core\\.org.eclipse.egit.core.cmp\\.settings\\org.eclipse.core.resources.prefs"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.jdt.core\\assumedExternalFilesCache"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.jdt.core\\externalFilesCache"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.jdt.core\\javaLikeNames.txt"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.jdt.core\\nonChainingJarsCache"
+                },
+                {
+                    "filename": ".metadata\\.plugins\\org.eclipse.jdt.core\\variablesAndContainers.dat",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 0,
+                    "code": 10,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.jdt.ui\\dialog_settings.xml"
+                },
+                {
+                    "blank": 0,
+                    "code": 2,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.jdt.ui\\OpenTypeHistory.xml"
+                },
+                {
+                    "blank": 0,
+                    "code": 2,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.jdt.ui\\QualifiedTypeNameHistory.xml"
+                },
+                {
+                    "filename": ".metadata\\.plugins\\org.eclipse.m2e.core\\workspaceState.ser",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 0,
+                    "code": 4,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.m2e.logback.configuration\\0.log"
+                },
+                {
+                    "blank": 4,
+                    "code": 37,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.m2e.logback.configuration\\logback.2.0.0.20220705-1221.xml"
+                },
+                {
+                    "blank": 0,
+                    "code": 7,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.oomph.setup.ui\\dialog_settings.xml"
+                },
+                {
+                    "blank": 0,
+                    "code": 6,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.oomph.setup\\workspace.setup"
+                },
+                {
+                    "blank": 0,
+                    "code": 3,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.tips.ide\\dialog_settings.xml"
+                },
+                {
+                    "blank": 0,
+                    "code": 2,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.ui.intro\\introstate"
+                },
+                {
+                    "blank": 0,
+                    "code": 6,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.ui.workbench\\workingsets.xml"
+                },
+                {
+                    "blank": 0,
+                    "code": 3,
+                    "comment": 0,
+                    "filename": ".metadata\\version.ini"
+                },
+                {
+                    "blank": 235,
+                    "code": 1177,
+                    "comment": 62,
+                    "filename": "Backend\\index.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 13,
+                    "comment": 0,
+                    "filename": "Backend\\package-lock.json"
+                },
+                {
+                    "blank": 0,
+                    "code": 12,
+                    "comment": 0,
+                    "filename": "Backend\\package.json"
+                },
+                {
+                    "blank": 2,
+                    "code": 32032,
+                    "comment": 0,
+                    "filename": "npm-shrinkwrap.json"
+                },
+                {
+                    "blank": 3,
+                    "code": 48,
+                    "comment": 0,
+                    "filename": "package.json"
+                },
+                {
+                    "filename": "public\\favicon.ico",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 0,
+                    "code": 20,
+                    "comment": 23,
+                    "filename": "public\\index.html"
+                },
+                {
+                    "filename": "public\\logo192.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "public\\logo512.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 0,
+                    "code": 25,
+                    "comment": 0,
+                    "filename": "public\\manifest.json"
+                },
+                {
+                    "blank": 0,
+                    "code": 3,
+                    "comment": 1,
+                    "filename": "public\\robots.txt"
+                },
+                {
+                    "blank": 0,
+                    "code": 3,
+                    "comment": 0,
+                    "filename": "public\\Templates\\Bulk_Upload_Format_(Faculties).csv"
+                },
+                {
+                    "blank": 0,
+                    "code": 3,
+                    "comment": 0,
+                    "filename": "public\\Templates\\Bulk_Upload_Format_(Students).csv"
+                },
+                {
+                    "filename": "public\\Transparent_Logo.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 15,
+                    "code": 21,
+                    "comment": 4,
+                    "filename": "README.md"
+                },
+                {
+                    "blank": 5,
+                    "code": 33,
+                    "comment": 0,
+                    "filename": "src\\App.css"
+                },
+                {
+                    "blank": 4,
+                    "code": 8,
+                    "comment": 0,
+                    "filename": "src\\App.js"
+                },
+                {
+                    "blank": 4,
+                    "code": 137,
+                    "comment": 0,
+                    "filename": "src\\App.jsx"
+                },
+                {
+                    "blank": 1,
+                    "code": 7,
+                    "comment": 0,
+                    "filename": "src\\App.test.js"
+                },
+                {
+                    "blank": 30,
+                    "code": 213,
+                    "comment": 4,
+                    "filename": "src\\Classes\\Users.tsx"
+                },
+                {
+                    "filename": "src\\Header\\Assets\\profile_image_template.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "src\\Header\\Assets\\Transparent_Logo.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 11,
+                    "code": 83,
+                    "comment": 0,
+                    "filename": "src\\Header\\header.css"
+                },
+                {
+                    "blank": 3,
+                    "code": 24,
+                    "comment": 0,
+                    "filename": "src\\Header\\header.jsx"
+                },
+                {
+                    "blank": 12,
+                    "code": 64,
+                    "comment": 1,
+                    "filename": "src\\Homepages\\Admin\\Add_Course\\Add_Course.jsx"
+                },
+                {
+                    "blank": 11,
+                    "code": 56,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\admin_homepage.css"
+                },
+                {
+                    "blank": 7,
+                    "code": 38,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\admin_homepage.jsx"
+                },
+                {
+                    "blank": 8,
+                    "code": 60,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\Faculty_Ops\\Add_Faculty\\Add_Faculty.css"
+                },
+                {
+                    "blank": 34,
+                    "code": 294,
+                    "comment": 2,
+                    "filename": "src\\Homepages\\Admin\\Faculty_Ops\\Add_Faculty\\Add_Faculty.jsx"
+                },
+                {
+                    "blank": 4,
+                    "code": 41,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\Faculty_Ops\\Edit_Faculty\\Edit_Faculty.css"
+                },
+                {
+                    "blank": 30,
+                    "code": 285,
+                    "comment": 5,
+                    "filename": "src\\Homepages\\Admin\\Faculty_Ops\\Edit_Faculty\\Edit_Faculty.jsx"
+                },
+                {
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\Faculty_Ops\\Edit_Faculty\\Edit_Faculty_Details\\Edit_Faculty_Details.css"
+                },
+                {
+                    "blank": 37,
+                    "code": 266,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\Faculty_Ops\\Edit_Faculty\\Edit_Faculty_Details\\Edit_Faculty_Details.jsx"
+                },
+                {
+                    "blank": 0,
+                    "code": 23,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\Map_TA_Faculty\\Faculty_Card\\Faculty_Card.css"
+                },
+                {
+                    "blank": 6,
+                    "code": 30,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\Map_TA_Faculty\\Faculty_Card\\Faculty_Card.jsx"
+                },
+                {
+                    "blank": 0,
+                    "code": 18,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\Map_TA_Faculty\\Faculty_Page\\Faculty_Page.css"
+                },
+                {
+                    "blank": 42,
+                    "code": 223,
+                    "comment": 1,
+                    "filename": "src\\Homepages\\Admin\\Map_TA_Faculty\\Faculty_Page\\Faculty_Page.jsx"
+                },
+                {
+                    "blank": 3,
+                    "code": 22,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\Map_TA_Faculty\\Map_TA_Faculty.css"
+                },
+                {
+                    "blank": 6,
+                    "code": 42,
+                    "comment": 1,
+                    "filename": "src\\Homepages\\Admin\\Map_TA_Faculty\\Map_TA_Faculty.jsx"
+                },
+                {
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\Ops.css"
+                },
+                {
+                    "blank": 4,
+                    "code": 34,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\Ops.jsx"
+                },
+                {
+                    "blank": 8,
+                    "code": 60,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\Profile_Page\\admin_profile_page.css"
+                },
+                {
+                    "blank": 17,
+                    "code": 111,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\Profile_Page\\admin_profile_page.jsx"
+                },
+                {
+                    "blank": 8,
+                    "code": 60,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\TA_Ops\\Add_TA\\Add_TA.css"
+                },
+                {
+                    "blank": 15,
+                    "code": 181,
+                    "comment": 2,
+                    "filename": "src\\Homepages\\Admin\\TA_Ops\\Add_TA\\Add_TA.jsx"
+                },
+                {
+                    "blank": 4,
+                    "code": 41,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\TA_Ops\\Edit_TA\\Edit_TA.css"
+                },
+                {
+                    "blank": 27,
+                    "code": 269,
+                    "comment": 5,
+                    "filename": "src\\Homepages\\Admin\\TA_Ops\\Edit_TA\\Edit_TA.jsx"
+                },
+                {
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\TA_Ops\\Edit_TA\\Edit_TA_Details\\Edit_TA_Details.css"
+                },
+                {
+                    "blank": 19,
+                    "code": 126,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\TA_Ops\\Edit_TA\\Edit_TA_Details\\Edit_TA_Details.jsx"
+                },
+                {
+                    "filename": "src\\Homepages\\Assets\\BITS_NAB.jpg",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "src\\Homepages\\Assets\\BITS_NAB_Blurred.jpg",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 8,
+                    "code": 63,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Faculty\\Completed_Tasks_Card\\Completed_Tasks_Card.css"
+                },
+                {
+                    "blank": 22,
+                    "code": 112,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Faculty\\Completed_Tasks_Card\\Completed_Tasks_Card.jsx"
+                },
+                {
+                    "blank": 0,
+                    "code": 23,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Faculty\\Course_Card\\Course_Card.css"
+                },
+                {
+                    "blank": 7,
+                    "code": 30,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Faculty\\Course_Card\\Course_Card.jsx"
+                },
+                {
+                    "blank": 2,
+                    "code": 18,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Faculty\\Course_Page\\Course_Page.css"
+                },
+                {
+                    "blank": 15,
+                    "code": 59,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Faculty\\Course_Page\\Course_Page.jsx"
+                },
+                {
+                    "blank": 14,
+                    "code": 69,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Faculty\\Faculty_Homepage.css"
+                },
+                {
+                    "blank": 4,
+                    "code": 34,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Faculty\\Faculty_Homepage.jsx"
+                },
+                {
+                    "blank": 5,
+                    "code": 43,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Faculty\\Incomplete_Tasks_Card\\Incomplete_Tasks_Card.css"
+                },
+                {
+                    "blank": 13,
+                    "code": 44,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Faculty\\Incomplete_Tasks_Card\\Incomplete_Tasks_Card.jsx"
+                },
+                {
+                    "blank": 2,
+                    "code": 37,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Faculty\\Task_Assignment\\Task_Assignment.css"
+                },
+                {
+                    "blank": 32,
+                    "code": 196,
+                    "comment": 1,
+                    "filename": "src\\Homepages\\Faculty\\Task_Assignment\\Task_Assignment.jsx"
+                },
+                {
+                    "blank": 0,
+                    "code": 5,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Faculty\\View_Tasks\\View_Tasks.css"
+                },
+                {
+                    "blank": 13,
+                    "code": 88,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Faculty\\View_Tasks\\View_Tasks.jsx"
+                },
+                {
+                    "blank": 26,
+                    "code": 165,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Profile_Page\\Faculty_Profile_Page.jsx"
+                },
+                {
+                    "blank": 8,
+                    "code": 60,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Profile_Page\\profile.css"
+                },
+                {
+                    "blank": 0,
+                    "code": 18,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\TA\\Apply\\Apply.css"
+                },
+                {
+                    "blank": 32,
+                    "code": 163,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\TA\\Apply\\Apply.jsx"
+                },
+                {
+                    "blank": 5,
+                    "code": 43,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\TA\\Completed_Task_Card_TA\\Completed_Tasks_Card_TA.css"
+                },
+                {
+                    "blank": 14,
+                    "code": 37,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\TA\\Completed_Task_Card_TA\\Completed_Tasks_Card_TA.jsx"
+                },
+                {
+                    "blank": 7,
+                    "code": 57,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\TA\\Incomplete_Task_Card_TA\\Incomplete_Task_Card_TA.css"
+                },
+                {
+                    "blank": 21,
+                    "code": 99,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\TA\\Incomplete_Task_Card_TA\\Incomplete_Task_Card_TA.jsx"
+                },
+                {
+                    "blank": 8,
+                    "code": 60,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\TA\\Profile_Page\\profile.css"
+                },
+                {
+                    "blank": 18,
+                    "code": 112,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\TA\\Profile_Page\\TA_Profile_Page.jsx"
+                },
+                {
+                    "blank": 12,
+                    "code": 60,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\TA\\TA_Homepage.css"
+                },
+                {
+                    "blank": 13,
+                    "code": 71,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\TA\\TA_Homepage.jsx"
+                },
+                {
+                    "blank": 11,
+                    "code": 41,
+                    "comment": 8,
+                    "filename": "src\\index.css"
+                },
+                {
+                    "blank": 2,
+                    "code": 5,
+                    "comment": 0,
+                    "filename": "src\\index.js"
+                },
+                {
+                    "filename": "src\\Login_Page\\Assets\\BITS_Campus.jpg",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "src\\Login_Page\\Assets\\BITS_Campus_blurred.jpg",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "src\\Login_Page\\Assets\\Logo without text.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "src\\Login_Page\\Assets\\Logo.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "src\\Login_Page\\Assets\\TAMS Logo (Gmail).png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "src\\Login_Page\\Assets\\Transparent_Logo.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 19,
+                    "code": 191,
+                    "comment": 0,
+                    "filename": "src\\Login_Page\\Login_page.css"
+                },
+                {
+                    "blank": 13,
+                    "code": 120,
+                    "comment": 4,
+                    "filename": "src\\Login_Page\\Login_page.jsx"
+                },
+                {
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 160,
+                    "filename": "src\\Login_Page\\Login_page_ts.tsx"
+                },
+                {
+                    "blank": 0,
+                    "code": 6,
+                    "comment": 0,
+                    "filename": "src\\Login_Page\\Recover_pass\\Recover_pass.css"
+                },
+                {
+                    "blank": 17,
+                    "code": 125,
+                    "comment": 6,
+                    "filename": "src\\Login_Page\\Recover_pass\\Recover_pass.jsx"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": "src\\logo.svg"
+                },
+                {
+                    "blank": 1,
+                    "code": 12,
+                    "comment": 0,
+                    "filename": "src\\reportWebVitals.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 4,
+                    "filename": "src\\setupTests.js"
+                }
+            ]
+        },
+        {
+            "version": "0.2.7",
+            "counttime": "2023-01-18 10:36:40",
+            "filesum": 131,
+            "codesum": 39323,
+            "commentsum": 312,
+            "blanksum": 998,
+            "statistics": {
+                ".js": {
+                    "code": 1210,
+                    "comment": 66,
+                    "blank": 243
+                },
+                ".svg": {
+                    "code": 1,
+                    "comment": 0,
+                    "blank": 0
+                },
+                ".jsx": {
+                    "code": 3579,
+                    "comment": 28,
+                    "blank": 523
+                },
+                ".tsx": {
+                    "code": 213,
+                    "comment": 164,
+                    "blank": 30
+                },
+                ".css": {
+                    "code": 1291,
+                    "comment": 8,
+                    "blank": 163
+                },
+                ".md": {
+                    "code": 21,
+                    "comment": 4,
+                    "blank": 15
+                },
+                ".csv": {
+                    "code": 6,
+                    "comment": 0,
+                    "blank": 0
+                },
+                ".txt": {
+                    "code": 4,
+                    "comment": 1,
+                    "blank": 0
+                },
+                ".json": {
+                    "code": 32130,
+                    "comment": 0,
+                    "blank": 5
+                },
+                ".html": {
+                    "code": 20,
+                    "comment": 23,
+                    "blank": 0
+                },
+                "": {
+                    "code": 276,
+                    "comment": 17,
+                    "blank": 15
+                },
+                ".ini": {
+                    "code": 3,
+                    "comment": 0,
+                    "blank": 0
+                },
+                ".xml": {
+                    "code": 67,
+                    "comment": 0,
+                    "blank": 4
+                },
+                ".setup": {
+                    "code": 6,
+                    "comment": 0,
+                    "blank": 0
+                },
+                ".log": {
+                    "code": 4,
+                    "comment": 0,
+                    "blank": 0
+                },
+                ".prefs": {
+                    "code": 35,
+                    "comment": 1,
+                    "blank": 0
+                },
+                ".xmi": {
+                    "code": 455,
+                    "comment": 0,
+                    "blank": 0
+                },
+                ".version": {
+                    "code": 2,
+                    "comment": 0,
+                    "blank": 0
+                }
+            },
+            "filelist": [
+                {
+                    "blank": 6,
+                    "code": 20,
+                    "comment": 17,
+                    "filename": ".gitignore"
+                },
+                {
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0,
+                    "filename": ".metadata\\.lock"
+                },
+                {
+                    "blank": 9,
+                    "code": 240,
+                    "comment": 0,
+                    "filename": ".metadata\\.log"
+                },
+                {
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.resources\\.projects\\.org.eclipse.egit.core.cmp\\.location",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.resources\\.root\\.indexes\\history.version"
+                },
+                {
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.resources\\.root\\.indexes\\properties.index",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.resources\\.root\\.indexes\\properties.version"
+                },
+                {
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.resources\\.root\\4.tree",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.resources\\.safetable\\org.eclipse.core.resources",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 0,
+                    "code": 3,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.runtime\\.settings\\org.eclipse.core.resources.prefs"
+                },
+                {
+                    "blank": 0,
+                    "code": 8,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.runtime\\.settings\\org.eclipse.jdt.ui.prefs"
+                },
+                {
+                    "blank": 0,
+                    "code": 2,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.runtime\\.settings\\org.eclipse.jsch.core.prefs"
+                },
+                {
+                    "blank": 0,
+                    "code": 2,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.runtime\\.settings\\org.eclipse.m2e.discovery.prefs"
+                },
+                {
+                    "blank": 0,
+                    "code": 2,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.runtime\\.settings\\org.eclipse.ui.browser.prefs"
+                },
+                {
+                    "blank": 0,
+                    "code": 4,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.runtime\\.settings\\org.eclipse.ui.ide.prefs"
+                },
+                {
+                    "blank": 0,
+                    "code": 2,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.runtime\\.settings\\org.eclipse.ui.prefs"
+                },
+                {
+                    "blank": 0,
+                    "code": 8,
+                    "comment": 1,
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.runtime\\.settings\\org.eclipse.ui.workbench.prefs"
+                },
+                {
+                    "blank": 0,
+                    "code": 2,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.core.runtime\\.settings\\org.eclipse.urischeme.prefs"
+                },
+                {
+                    "blank": 0,
+                    "code": 455,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.e4.workbench\\workbench.xmi"
+                },
+                {
+                    "blank": 0,
+                    "code": 11,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.egit.core\\.org.eclipse.egit.core.cmp\\.project"
+                },
+                {
+                    "blank": 0,
+                    "code": 2,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.egit.core\\.org.eclipse.egit.core.cmp\\.settings\\org.eclipse.core.resources.prefs"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.jdt.core\\assumedExternalFilesCache"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.jdt.core\\externalFilesCache"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.jdt.core\\javaLikeNames.txt"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.jdt.core\\nonChainingJarsCache"
+                },
+                {
+                    "filename": ".metadata\\.plugins\\org.eclipse.jdt.core\\variablesAndContainers.dat",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 0,
+                    "code": 10,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.jdt.ui\\dialog_settings.xml"
+                },
+                {
+                    "blank": 0,
+                    "code": 2,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.jdt.ui\\OpenTypeHistory.xml"
+                },
+                {
+                    "blank": 0,
+                    "code": 2,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.jdt.ui\\QualifiedTypeNameHistory.xml"
+                },
+                {
+                    "filename": ".metadata\\.plugins\\org.eclipse.m2e.core\\workspaceState.ser",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 0,
+                    "code": 4,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.m2e.logback.configuration\\0.log"
+                },
+                {
+                    "blank": 4,
+                    "code": 37,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.m2e.logback.configuration\\logback.2.0.0.20220705-1221.xml"
+                },
+                {
+                    "blank": 0,
+                    "code": 7,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.oomph.setup.ui\\dialog_settings.xml"
+                },
+                {
+                    "blank": 0,
+                    "code": 6,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.oomph.setup\\workspace.setup"
+                },
+                {
+                    "blank": 0,
+                    "code": 3,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.tips.ide\\dialog_settings.xml"
+                },
+                {
+                    "blank": 0,
+                    "code": 2,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.ui.intro\\introstate"
+                },
+                {
+                    "blank": 0,
+                    "code": 6,
+                    "comment": 0,
+                    "filename": ".metadata\\.plugins\\org.eclipse.ui.workbench\\workingsets.xml"
+                },
+                {
+                    "blank": 0,
+                    "code": 3,
+                    "comment": 0,
+                    "filename": ".metadata\\version.ini"
+                },
+                {
+                    "blank": 235,
+                    "code": 1177,
+                    "comment": 62,
+                    "filename": "Backend\\index.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 13,
+                    "comment": 0,
+                    "filename": "Backend\\package-lock.json"
+                },
+                {
+                    "blank": 0,
+                    "code": 12,
+                    "comment": 0,
+                    "filename": "Backend\\package.json"
+                },
+                {
+                    "blank": 2,
+                    "code": 32032,
+                    "comment": 0,
+                    "filename": "npm-shrinkwrap.json"
+                },
+                {
+                    "blank": 3,
+                    "code": 48,
+                    "comment": 0,
+                    "filename": "package.json"
+                },
+                {
+                    "filename": "public\\favicon.ico",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 0,
+                    "code": 20,
+                    "comment": 23,
+                    "filename": "public\\index.html"
+                },
+                {
+                    "filename": "public\\logo192.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "public\\logo512.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 0,
+                    "code": 25,
+                    "comment": 0,
+                    "filename": "public\\manifest.json"
+                },
+                {
+                    "blank": 0,
+                    "code": 3,
+                    "comment": 1,
+                    "filename": "public\\robots.txt"
+                },
+                {
+                    "blank": 0,
+                    "code": 3,
+                    "comment": 0,
+                    "filename": "public\\Templates\\Bulk_Upload_Format_(Faculties).csv"
+                },
+                {
+                    "blank": 0,
+                    "code": 3,
+                    "comment": 0,
+                    "filename": "public\\Templates\\Bulk_Upload_Format_(Students).csv"
+                },
+                {
+                    "filename": "public\\Transparent_Logo.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 15,
+                    "code": 21,
+                    "comment": 4,
+                    "filename": "README.md"
+                },
+                {
+                    "blank": 5,
+                    "code": 33,
+                    "comment": 0,
+                    "filename": "src\\App.css"
+                },
+                {
+                    "blank": 4,
+                    "code": 8,
+                    "comment": 0,
+                    "filename": "src\\App.js"
+                },
+                {
+                    "blank": 4,
+                    "code": 137,
+                    "comment": 0,
+                    "filename": "src\\App.jsx"
+                },
+                {
+                    "blank": 1,
+                    "code": 7,
+                    "comment": 0,
+                    "filename": "src\\App.test.js"
+                },
+                {
+                    "blank": 30,
+                    "code": 213,
+                    "comment": 4,
+                    "filename": "src\\Classes\\Users.tsx"
+                },
+                {
+                    "filename": "src\\Header\\Assets\\profile_image_template.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "src\\Header\\Assets\\Transparent_Logo.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 11,
+                    "code": 83,
+                    "comment": 0,
+                    "filename": "src\\Header\\header.css"
+                },
+                {
+                    "blank": 3,
+                    "code": 24,
+                    "comment": 0,
+                    "filename": "src\\Header\\header.jsx"
+                },
+                {
+                    "blank": 12,
+                    "code": 64,
+                    "comment": 1,
+                    "filename": "src\\Homepages\\Admin\\Add_Course\\Add_Course.jsx"
+                },
+                {
+                    "blank": 11,
+                    "code": 56,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\admin_homepage.css"
+                },
+                {
+                    "blank": 7,
+                    "code": 38,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\admin_homepage.jsx"
+                },
+                {
+                    "blank": 8,
+                    "code": 60,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\Faculty_Ops\\Add_Faculty\\Add_Faculty.css"
+                },
+                {
+                    "blank": 34,
+                    "code": 294,
+                    "comment": 2,
+                    "filename": "src\\Homepages\\Admin\\Faculty_Ops\\Add_Faculty\\Add_Faculty.jsx"
+                },
+                {
+                    "blank": 4,
+                    "code": 41,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\Faculty_Ops\\Edit_Faculty\\Edit_Faculty.css"
+                },
+                {
+                    "blank": 30,
+                    "code": 285,
+                    "comment": 5,
+                    "filename": "src\\Homepages\\Admin\\Faculty_Ops\\Edit_Faculty\\Edit_Faculty.jsx"
+                },
+                {
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\Faculty_Ops\\Edit_Faculty\\Edit_Faculty_Details\\Edit_Faculty_Details.css"
+                },
+                {
+                    "blank": 37,
+                    "code": 266,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\Faculty_Ops\\Edit_Faculty\\Edit_Faculty_Details\\Edit_Faculty_Details.jsx"
+                },
+                {
+                    "blank": 0,
+                    "code": 23,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\Map_TA_Faculty\\Faculty_Card\\Faculty_Card.css"
+                },
+                {
+                    "blank": 6,
+                    "code": 30,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\Map_TA_Faculty\\Faculty_Card\\Faculty_Card.jsx"
+                },
+                {
+                    "blank": 0,
+                    "code": 18,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\Map_TA_Faculty\\Faculty_Page\\Faculty_Page.css"
+                },
+                {
+                    "blank": 42,
+                    "code": 223,
+                    "comment": 1,
+                    "filename": "src\\Homepages\\Admin\\Map_TA_Faculty\\Faculty_Page\\Faculty_Page.jsx"
+                },
+                {
+                    "blank": 3,
+                    "code": 22,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\Map_TA_Faculty\\Map_TA_Faculty.css"
+                },
+                {
+                    "blank": 6,
+                    "code": 42,
+                    "comment": 1,
+                    "filename": "src\\Homepages\\Admin\\Map_TA_Faculty\\Map_TA_Faculty.jsx"
+                },
+                {
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\Ops.css"
+                },
+                {
+                    "blank": 4,
+                    "code": 34,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\Ops.jsx"
+                },
+                {
+                    "blank": 8,
+                    "code": 60,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\Profile_Page\\admin_profile_page.css"
+                },
+                {
+                    "blank": 17,
+                    "code": 111,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\Profile_Page\\admin_profile_page.jsx"
+                },
+                {
+                    "blank": 8,
+                    "code": 60,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\TA_Ops\\Add_TA\\Add_TA.css"
+                },
+                {
+                    "blank": 15,
+                    "code": 181,
+                    "comment": 2,
+                    "filename": "src\\Homepages\\Admin\\TA_Ops\\Add_TA\\Add_TA.jsx"
+                },
+                {
+                    "blank": 4,
+                    "code": 41,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\TA_Ops\\Edit_TA\\Edit_TA.css"
+                },
+                {
+                    "blank": 27,
+                    "code": 269,
+                    "comment": 5,
+                    "filename": "src\\Homepages\\Admin\\TA_Ops\\Edit_TA\\Edit_TA.jsx"
+                },
+                {
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\TA_Ops\\Edit_TA\\Edit_TA_Details\\Edit_TA_Details.css"
+                },
+                {
+                    "blank": 19,
+                    "code": 126,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Admin\\TA_Ops\\Edit_TA\\Edit_TA_Details\\Edit_TA_Details.jsx"
+                },
+                {
+                    "filename": "src\\Homepages\\Assets\\BITS_NAB.jpg",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "src\\Homepages\\Assets\\BITS_NAB_Blurred.jpg",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 8,
+                    "code": 63,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Faculty\\Completed_Tasks_Card\\Completed_Tasks_Card.css"
+                },
+                {
+                    "blank": 22,
+                    "code": 112,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Faculty\\Completed_Tasks_Card\\Completed_Tasks_Card.jsx"
+                },
+                {
+                    "blank": 0,
+                    "code": 23,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Faculty\\Course_Card\\Course_Card.css"
+                },
+                {
+                    "blank": 7,
+                    "code": 30,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Faculty\\Course_Card\\Course_Card.jsx"
+                },
+                {
+                    "blank": 2,
+                    "code": 18,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Faculty\\Course_Page\\Course_Page.css"
+                },
+                {
+                    "blank": 15,
+                    "code": 59,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Faculty\\Course_Page\\Course_Page.jsx"
+                },
+                {
+                    "blank": 14,
+                    "code": 69,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Faculty\\Faculty_Homepage.css"
+                },
+                {
+                    "blank": 4,
+                    "code": 34,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Faculty\\Faculty_Homepage.jsx"
+                },
+                {
+                    "blank": 5,
+                    "code": 43,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Faculty\\Incomplete_Tasks_Card\\Incomplete_Tasks_Card.css"
+                },
+                {
+                    "blank": 13,
+                    "code": 44,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Faculty\\Incomplete_Tasks_Card\\Incomplete_Tasks_Card.jsx"
+                },
+                {
+                    "blank": 2,
+                    "code": 37,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Faculty\\Task_Assignment\\Task_Assignment.css"
+                },
+                {
+                    "blank": 32,
+                    "code": 196,
+                    "comment": 1,
+                    "filename": "src\\Homepages\\Faculty\\Task_Assignment\\Task_Assignment.jsx"
+                },
+                {
+                    "blank": 0,
+                    "code": 5,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Faculty\\View_Tasks\\View_Tasks.css"
+                },
+                {
+                    "blank": 13,
+                    "code": 88,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Faculty\\View_Tasks\\View_Tasks.jsx"
+                },
+                {
+                    "blank": 26,
+                    "code": 165,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Profile_Page\\Faculty_Profile_Page.jsx"
+                },
+                {
+                    "blank": 8,
+                    "code": 60,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\Profile_Page\\profile.css"
+                },
+                {
+                    "blank": 0,
+                    "code": 18,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\TA\\Apply\\Apply.css"
+                },
+                {
+                    "blank": 32,
+                    "code": 163,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\TA\\Apply\\Apply.jsx"
+                },
+                {
+                    "blank": 5,
+                    "code": 43,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\TA\\Completed_Task_Card_TA\\Completed_Tasks_Card_TA.css"
+                },
+                {
+                    "blank": 14,
+                    "code": 37,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\TA\\Completed_Task_Card_TA\\Completed_Tasks_Card_TA.jsx"
+                },
+                {
+                    "blank": 7,
+                    "code": 57,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\TA\\Incomplete_Task_Card_TA\\Incomplete_Task_Card_TA.css"
+                },
+                {
+                    "blank": 21,
+                    "code": 99,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\TA\\Incomplete_Task_Card_TA\\Incomplete_Task_Card_TA.jsx"
+                },
+                {
+                    "blank": 8,
+                    "code": 60,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\TA\\Profile_Page\\profile.css"
+                },
+                {
+                    "blank": 18,
+                    "code": 112,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\TA\\Profile_Page\\TA_Profile_Page.jsx"
+                },
+                {
+                    "blank": 12,
+                    "code": 60,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\TA\\TA_Homepage.css"
+                },
+                {
+                    "blank": 13,
+                    "code": 71,
+                    "comment": 0,
+                    "filename": "src\\Homepages\\TA\\TA_Homepage.jsx"
+                },
+                {
+                    "blank": 11,
+                    "code": 41,
+                    "comment": 8,
+                    "filename": "src\\index.css"
+                },
+                {
+                    "blank": 2,
+                    "code": 5,
+                    "comment": 0,
+                    "filename": "src\\index.js"
+                },
+                {
+                    "filename": "src\\Login_Page\\Assets\\BITS_Campus.jpg",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "src\\Login_Page\\Assets\\BITS_Campus_blurred.jpg",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "src\\Login_Page\\Assets\\Logo without text.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "src\\Login_Page\\Assets\\Logo.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "src\\Login_Page\\Assets\\TAMS Logo (Gmail).png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "filename": "src\\Login_Page\\Assets\\Transparent_Logo.png",
+                    "isbinaryfile": true,
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 0
+                },
+                {
+                    "blank": 19,
+                    "code": 191,
+                    "comment": 0,
+                    "filename": "src\\Login_Page\\Login_page.css"
+                },
+                {
+                    "blank": 13,
+                    "code": 120,
+                    "comment": 4,
+                    "filename": "src\\Login_Page\\Login_page.jsx"
+                },
+                {
+                    "blank": 0,
+                    "code": 0,
+                    "comment": 160,
+                    "filename": "src\\Login_Page\\Login_page_ts.tsx"
+                },
+                {
+                    "blank": 0,
+                    "code": 6,
+                    "comment": 0,
+                    "filename": "src\\Login_Page\\Recover_pass\\Recover_pass.css"
+                },
+                {
+                    "blank": 17,
+                    "code": 125,
+                    "comment": 6,
+                    "filename": "src\\Login_Page\\Recover_pass\\Recover_pass.jsx"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 0,
+                    "filename": "src\\logo.svg"
+                },
+                {
+                    "blank": 1,
+                    "code": 12,
+                    "comment": 0,
+                    "filename": "src\\reportWebVitals.js"
+                },
+                {
+                    "blank": 0,
+                    "code": 1,
+                    "comment": 4,
+                    "filename": "src\\setupTests.js"
+                }
+            ]
+        }
+    ]
+}
