@@ -4,6 +4,8 @@ import Header from '../../../../../Header/header.jsx'
 import { useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import axios from 'axios'
+import { useContext } from 'react';
+import {userContext} from '../../../../../App.jsx'
 
 
 function Edit_Course_Details(props) 
@@ -11,6 +13,9 @@ function Edit_Course_Details(props)
     const location=useLocation()
     const Course_details = location.state.Course
     const Course_id = {id:Course_details._id}
+
+    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+   
 
     const [Course_code,set_Course_code] = useState(Course_details.code)
     const [Course_name,set_Course_name]=useState(Course_details.name)
@@ -32,7 +37,7 @@ function Edit_Course_Details(props)
 
     if(axios_call_count==0||update==false)
     {
-      axios.post("http://localhost:9000/fetch_course",Course_id).then(
+      axiosJWT.post("http://localhost:9000/fetch_course",Course_id, {headers:{'authorization':"Bearer "+userAccessToken}}).then(
         res => {
                   set_call_count(1)
                   set_update(true)
@@ -80,7 +85,7 @@ function Edit_Course_Details(props)
         }
         else
         {
-            axios.put("http://localhost:9000/Update_Course_Details", Course)
+            axiosJWT.put("http://localhost:9000/Update_Course_Details", Course, {headers:{'authorization':"Bearer "+userAccessToken}})
             .then( res=> {setmessage(res.data.message)} )
         }
 

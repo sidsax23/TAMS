@@ -3,10 +3,13 @@ import Header from '../../../../Header/header.jsx'
 import {Admin} from '../../../../Classes/Users.tsx'
 import Papa from 'papaparse'
 import {Link} from 'react-router-dom'
+import { useContext } from 'react'
+import {userContext} from '../../../../App.jsx'
 
 const Add_Course = (props) => 
 {
-
+    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+    
         const [Message,setmessage] = useState("")
         const [show,setshow] = useState(false)
         const [Message2,setmessage2] = useState("")
@@ -47,9 +50,9 @@ const Add_Course = (props) =>
             }
             else
             {
-                let A1 = new Admin()
-                const response = await A1.Create_Course(Course_temp.name,Course_temp.code)
-                setmessage(response)                 
+                const course={course_name: Course_temp.name,course_code: Course_temp.code}
+                const response = await axiosJWT.post("http://localhost:9000/Add_Course", course, {headers:{'authorization':"Bearer "+userAccessToken}})
+                setmessage(response.data.message)                 
             }
         }
 
@@ -116,11 +119,11 @@ const Add_Course = (props) =>
             setshow(true)
             if(no_file_flag==false&&duplicate_course_code_flag==false)
             {
-                let A1 = new Admin()
                 for(var i=0;i<course_count;i++)
                 {
-                    const response = await A1.Create_Course(bulk_data[i][0],bulk_data[i][1])
-                    if(response!="Course Successfully Added")
+                    const course={course_name: bulk_data[i][0],course_code: bulk_data[i][1]}
+                    const response = await axiosJWT.post("http://localhost:9000/Add_Course", course, {headers:{'authorization':"Bearer "+userAccessToken}})
+                    if(response.data.message!="Course Successfully Added")
                     {
                         console.log("Course (with Course Code ",bulk_data[i][1],") could not be uploaded. Error : ",response)
                     }

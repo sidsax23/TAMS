@@ -69,3 +69,18 @@
     border: 1px solid var(--neon_blue);
 
 }
+
+.task_details_input
+{
+    width: 50%;
+    font-weight: 450;
+    font-size: medium;
+    border-radius: 2rem;
+    padding: 0.75%;
+    padding-left: 1.5%;
+    border: 1px solid black;
+}
+.h2,.h3
+{
+    color: #2b2b88;
+}

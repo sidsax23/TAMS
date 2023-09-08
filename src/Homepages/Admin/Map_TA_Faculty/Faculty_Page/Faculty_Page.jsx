@@ -4,9 +4,13 @@ import './Faculty_Page.css'
 import { Link, useLocation } from 'react-router-dom'
 import axios from 'axios'
 import {Admin} from '../../../../Classes/Users.tsx'
+import { useContext } from 'react';
+import {userContext} from '../../../../App.jsx'
 
 const Faculty_Page = (props) => 
 {
+    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+   
     const location=useLocation()
     const faculty = location.state.faculty
     const [TA_requests,set_TA_requests] = useState("")
@@ -33,14 +37,13 @@ const Faculty_Page = (props) =>
     {
         const fetch_TA_requests = async () =>
         {
-            const result = await axios.post("http://localhost:9000/fetch_TA_requests",faculty)
+            const result = await axiosJWT.post("http://localhost:9000/fetch_TA_requests",faculty, {headers:{'authorization':"Bearer "+userAccessToken}})
             set_TA_requests(result)
-            console.log(result.data)
         }
         fetch_TA_requests()
         const fetch_TAs = async () =>
         {
-            const result2 = await axios.post("http://localhost:9000/fetch_TAs")
+            const result2 = await axiosJWT.post("http://localhost:9000/fetch_TAs",null, {headers:{'authorization':"Bearer "+userAccessToken}})
             set_TAs(result2)
         }
         fetch_TAs()
@@ -150,9 +153,14 @@ const Faculty_Page = (props) =>
         else
         {
             TAs_Temp.Email=faculty.email
-            let A1 = new Admin()
-            const response = await A1.Map_TA_Faculty(TAs_Temp.Email,TAs_Temp.TA_Emails,TAs_Temp.Courses,TAs_Temp.TA_num)
-            setmessage(response)  
+            const data = {
+                Email:TAs_Temp.Email,
+                TA_Emails:TAs_Temp.TA_Emails,
+                Course_Codes:TAs_Temp.Courses
+
+            }
+            const response = await axiosJWT.post("http://localhost:9000/Map_TA_Faculty", data, {headers:{'authorization':"Bearer "+userAccessToken}})
+            setmessage(response.data.message)  
         }
         
     } 

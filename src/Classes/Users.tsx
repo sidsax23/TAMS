@@ -1,6 +1,6 @@
-import React from 'react'
-import axios from 'axios'
-
+import { useContext } from 'react';
+import {userContext} from '../App.jsx'
+  
 abstract class User 
 {
     protected Name : String
@@ -50,6 +50,38 @@ abstract class User
 
 }
 
+export function AxiosJWT()
+{
+    const [
+        userEmail,
+        setUserEmail,
+        userType,
+        setUserType,
+        userAccessToken,
+        setUserAccessToken,
+        userRefreshToken,
+        setUserRefreshToken,
+        axiosJWT
+      ] = useContext(userContext);
+      return axiosJWT
+}
+
+export function UserAccessToken()
+{
+    const [
+        userEmail,
+        setUserEmail,
+        userType,
+        setUserType,
+        userAccessToken,
+        setUserAccessToken,
+        userRefreshToken,
+        setUserRefreshToken,
+        axiosJWT
+      ] = useContext(userContext);
+      return userAccessToken
+}
+
 export class TA extends User
 {
     Type="TA"
@@ -80,7 +112,7 @@ export class TA extends User
         this.course3 = course3
         this.Email = Email
         var temp;  
-        temp = await axios.post("http://localhost:9000/Set_choices", this)
+        temp = await AxiosJWT().post("http://localhost:9000/Set_choices", this, {headers:{'authorization':"Bearer "+UserAccessToken()}})
         this.message = temp.data.message
         return this.message
     }
@@ -94,7 +126,7 @@ export class TA extends User
             index : Index
         }
         var temp;  
-        temp = await axios.post("http://localhost:9000/Update_Task_Status", details)
+        temp = await AxiosJWT().post("http://localhost:9000/Update_Task_Status", details, {headers:{'authorization':"Bearer "+UserAccessToken()}})
         this.message = temp.data.message
         return this.message
     }
@@ -133,16 +165,19 @@ export class Faculty extends User
 
     }
 
-    async Add_Inputs(Ratings :Number[], Comments : String[],Task_ID : String)
+    async Edit_Task(Ratings :Number[], Comments : String[],Task_ID : String,Name : String, Description : String, Deadline : Date)
     {
         const details = 
         {
             ratings : Ratings,
             id : Task_ID,
-            comments : Comments
+            comments : Comments,
+            name : Name,
+            description : Description,
+            deadline : Deadline
         }
         var temp;  
-        temp = await axios.post("http://localhost:9000/Add_Task_Inputs_Faculty", details)
+        temp = await AxiosJWT().post("http://localhost:9000/Edit_Task_Faculty", details, {headers:{'authorization':"Bearer "+UserAccessToken()}})
         this.message = temp.data.message
         return this.message
     } 
@@ -153,7 +188,7 @@ export class Faculty extends User
         var temp;
         let T1 = new Task();
         T1.Task(Task_Name, Description, Deadliine, TA_Emails, Faculty_Email, Course_Code)
-        temp = await axios.post("http://localhost:9000/Assign_Task", T1)
+        temp = await AxiosJWT().post("http://localhost:9000/Assign_Task", T1, {headers:{'authorization':"Bearer "+UserAccessToken()}})
         this.message = temp.data.message
         return this.message  
     }
@@ -171,7 +206,7 @@ export class Admin extends User
         F1.set_email(Email)
         F1.set_TAs(TA_Emails);
         const data = {F1,Course_Codes}
-        temp = await axios.post("http://localhost:9000/Map_TA_Faculty", data)
+        temp = await AxiosJWT().post("http://localhost:9000/Map_TA_Faculty", data, {headers:{'authorization':"Bearer "+UserAccessToken()}})
         this.message = temp.data.message
         return this.message
     }
@@ -181,7 +216,7 @@ export class Admin extends User
         var temp;
         let T1 = new TA();
         T1.TA(Name,Email,Pass,Contact_Num);
-        temp = await axios.post("http://localhost:9000/Add_TA", T1)
+        temp = await AxiosJWT().post("http://localhost:9000/Add_TA", T1, {headers:{'authorization':"Bearer "+UserAccessToken()}})
         this.message = temp.data.message
         return this.message
 
@@ -192,7 +227,7 @@ export class Admin extends User
         var temp;
         let F1 = new Faculty();
         F1.Faculty(Name,Email,Pass,Contact_Num,TAs_Req,Courses,Image_URL);
-        temp = await axios.post("http://localhost:9000/Add_Faculty", F1)
+        temp = await AxiosJWT().post("http://localhost:9000/Add_Faculty", F1, {headers:{'authorization':"Bearer "+UserAccessToken()}})
         this.message = temp.data.message
         return this.message
     }
@@ -202,7 +237,7 @@ export class Admin extends User
         var temp;
         let C1 = new Course();
         C1.Course(Name,Code);
-        temp = await axios.post("http://localhost:9000/Add_Course", C1)
+        temp = await AxiosJWT().post("http://localhost:9000/Add_Course", C1, {headers:{'authorization':"Bearer "+UserAccessToken()}})
         this.message = temp.data.message
         return this.message
     }

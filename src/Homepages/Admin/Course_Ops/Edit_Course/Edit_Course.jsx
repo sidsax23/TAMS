@@ -8,8 +8,15 @@ import axios from 'axios'
 import { CSVLink } from 'react-csv'
 import Popup from 'reactjs-popup'
 import 'reactjs-popup/dist/index.css' 
+import { useContext } from 'react';
+import {userContext} from '../../../../App.jsx'
+
 
 const Edit_Course = (props) => {
+
+  
+  const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+
 
   const [courses,set_courses] = useState([])
   const [selected_data,set_selected_data] = useState([])
@@ -26,7 +33,7 @@ const Edit_Course = (props) => {
   {
     try 
     {
-      const response = await axios.post("http://localhost:9000/fetch_courses")
+      const response = await axiosJWT.get("http://localhost:9000/fetch_courses", {headers:{'authorization':"Bearer "+userAccessToken}})
       set_filtered_courses(response.data)
       set_courses(response.data)
     } 
@@ -91,7 +98,7 @@ const Edit_Course = (props) => {
       Course_Details.codes.push(selected_data[i].code)
     }
     
-    axios.post("http://localhost:9000/Delete_Courses", Course_Details).then( (res) =>
+    axiosJWT.post("http://localhost:9000/Delete_Courses", Course_Details, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
     {
 
       set_inner_popup1_message(res.data)
@@ -112,7 +119,7 @@ const Edit_Course = (props) => {
        Course_Details.codes.push(selected_data[i].code)
      }
      
-     axios.post("http://localhost:9000/Reset_TA-Ship_Courses", Course_Details).then( (res) =>
+     axiosJWT.post("http://localhost:9000/Reset_TA-Ship_Courses", Course_Details, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
      {
        set_inner_popup2_message(res.data)
        set_popup2(false)

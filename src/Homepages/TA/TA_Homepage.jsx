@@ -6,9 +6,13 @@ import {BsBookHalf} from 'react-icons/bs'
 import axios from 'axios'
 import Incomplete_Tasks_Card_TA from './Incomplete_Task_Card_TA/Incomplete_Task_Card_TA'
 import Completed_Tasks_Card_TA from './Completed_Task_Card_TA/Completed_Tasks_Card_TA.jsx'
+import { useContext } from 'react';
+import {userContext} from '../../App.jsx'
 
 const TA_homepage = (props) => 
 {
+    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+   
 
     const [incomplete_tasks,set_incomplete_tasks] = useState("")
     const [completed_tasks,set_completed_tasks] = useState("")
@@ -19,14 +23,14 @@ const TA_homepage = (props) =>
 
         const fetch_incomplete_tasks = async () =>
         {
-            const data= await axios.post("http://localhost:9000/fetch_incomplete_tasks_TA",email)
+            const data= await axiosJWT.post("http://localhost:9000/fetch_incomplete_tasks_TA",email, {headers:{'authorization':"Bearer "+userAccessToken}})
             set_incomplete_tasks(data)
         }
         fetch_incomplete_tasks();
 
         const fetch_completed_tasks = async () =>
         {
-            const data= await axios.post("http://localhost:9000/fetch_completed_tasks_TA",email)
+            const data= await axiosJWT.post("http://localhost:9000/fetch_completed_tasks_TA",email, {headers:{'authorization':"Bearer "+userAccessToken}})
             set_completed_tasks(data)
         }
         fetch_completed_tasks();

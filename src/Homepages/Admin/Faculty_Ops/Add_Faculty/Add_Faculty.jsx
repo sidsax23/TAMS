@@ -5,10 +5,14 @@ import axios from 'axios'
 import {Admin} from '../../../../Classes/Users.tsx'
 import Papa from 'papaparse'
 import { Link } from 'react-router-dom'
+import { useContext } from 'react';
+import {userContext} from '../../../../App.jsx'
 
 const Add_Faculty = (props) => 
 {
 
+    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+   
         const [Message,setmessage] = useState("")
         const [show,setshow] = useState(false)
         const [courses,set_courses] = useState("")
@@ -46,7 +50,7 @@ const Add_Faculty = (props) =>
         {
             const fetch_courses = async () =>
             {
-                const result= await axios.post("http://localhost:9000/fetch_courses")
+                const result= await axiosJWT.get("http://localhost:9000/fetch_courses", {headers:{'authorization':"Bearer "+userAccessToken}})
                 set_courses(result)
                 set_course_codes(result.data.map(({ code }) => code))
             }
@@ -151,9 +155,20 @@ const Add_Faculty = (props) =>
                 else
                 {
                    
-                    let A1 = new Admin()
-                    const response = await A1.Create_Faculty(Faculty_temp.name,Faculty_temp.email,Faculty_temp.pass,Number(Faculty_temp.contact_num),-1,Faculty_temp.courses,Faculty_temp.image_url)
-                    setmessage(response)  
+                    const faculty = {
+                        Name:Faculty_temp.name,
+                        Email:Faculty_temp.email,
+                        Type:"Faculty",
+                        Pass:Faculty_temp.pass,
+                        Contact_Num:Number(Faculty_temp.contact_num),
+                        TAs_Required:-1,
+                        Dept:"CSIS",
+                        Courses:Faculty_temp.courses,
+                        Image_URL:Faculty_temp.image_url
+
+                    }
+                    const response = await axiosJWT.post("http://localhost:9000/Add_Faculty", faculty, {headers:{'authorization':"Bearer "+userAccessToken}})
+                    setmessage(response.data.message)  
 
                 }
             }
@@ -268,12 +283,22 @@ const Add_Faculty = (props) =>
             setshow(true)
             if(bulk_phone_num_flag==false&&bulk_email_flag==false&&bulk_tas_req_flag==false&&bulk_course_codes_flag==false&&no_file_flag==false&&missing_password_flag==false&&duplicate_email_flag==false&&duplicate_course_code_flag==false)
             {
-                let A1 = new Admin()
                 for(var i=0;i<faculty_count;i++)
                 {
                     const Courses = [bulk_data[i][5],bulk_data[i][6],bulk_data[i][7],bulk_data[i][8],bulk_data[i][9]]
-                    const response = await A1.Create_Faculty(bulk_data[i][0],bulk_data[i][1],bulk_data[i][2],Number(bulk_data[i][3]),bulk_data[i][4],Courses,"")
-                    if(response!="Faculty Successfully Added")
+                    const faculty = {
+                        Name:bulk_data[i][0],
+                        Email:bulk_data[i][1],
+                        Type:"Faculty",
+                        Pass:bulk_data[i][2],
+                        Contact_Num:Number(bulk_data[i][3]),
+                        TAs_Required:bulk_data[i][4],
+                        Dept:"CSIS",
+                        Courses:Courses,
+
+                    }
+                    const response = await axiosJWT.post("http://localhost:9000/Add_Faculty", faculty, {headers:{'authorization':"Bearer "+userAccessToken}})
+                    if(response.data.message!="Faculty Successfully Added")
                     {
                         console.log("Faculty (with Email ID ",bulk_data[i][1],") could not be uploaded. Error : ",response)
                     }

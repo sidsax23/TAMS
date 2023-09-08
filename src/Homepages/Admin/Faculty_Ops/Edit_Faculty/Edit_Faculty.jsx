@@ -8,8 +8,13 @@ import axios from 'axios'
 import { CSVLink } from 'react-csv'
 import Popup from 'reactjs-popup'
 import 'reactjs-popup/dist/index.css' 
+import { useContext } from 'react';
+import {userContext} from '../../../../App.jsx'
 
 const Edit_Faculty = (props) => {
+
+  const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+   
 
   const [faculties,set_faculties] = useState([])
   const [selected_data,set_selected_data] = useState([])
@@ -28,7 +33,7 @@ const Edit_Faculty = (props) => {
   {
     try 
     {
-      const response = await axios.post("http://localhost:9000/fetch_faculties")
+      const response = await axiosJWT.get("http://localhost:9000/fetch_faculties", {headers:{'authorization':"Bearer "+userAccessToken}})
       set_faculties(response.data)
       set_filtered_faculties(response.data)
       set_updation_flag(1)
@@ -50,7 +55,7 @@ const Edit_Faculty = (props) => {
       for(var i=0;i<faculties.length;i++)
       {
         const email = {email : faculties[i].Faculty_Email}
-        const faculty = await axios.post("http://localhost:9000/fetch_faculty_by_email",email) 
+        const faculty = await axiosJWT.post("http://localhost:9000/fetch_faculty_by_email",email, {headers:{'authorization':"Bearer "+userAccessToken}}) 
         faculties[i].faculty_name = faculty.data.name; 
       }
       set_updation_flag(0)
@@ -170,7 +175,7 @@ const Edit_Faculty = (props) => {
       
     }
     
-    axios.post("http://localhost:9000/Delete_Faculties", Faculty_Details).then( (res) =>
+    axiosJWT.post("http://localhost:9000/Delete_Faculties", Faculty_Details, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
     {
 
       set_inner_popup1_message(res.data)
@@ -198,7 +203,7 @@ const Edit_Faculty = (props) => {
        }
      }
      
-     axios.post("http://localhost:9000/Reset_TA-Ship_Faculties", Faculty_Details).then( (res) =>
+     axiosJWT.post("http://localhost:9000/Reset_TA-Ship_Faculties", Faculty_Details, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
      {
        set_inner_popup2_message(res.data)
        set_popup2(false)

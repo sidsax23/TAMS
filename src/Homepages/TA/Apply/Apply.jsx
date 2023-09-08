@@ -3,9 +3,13 @@ import Header from '../../../Header/header.jsx'
 import './Apply.css'
 import axios from 'axios'
 import {TA} from '../../../Classes/Users.tsx'
+import { useContext } from 'react';
+import {userContext} from '../../../App.jsx'
 
 const Apply = (props) => 
 {
+    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+   
         const [Status,set_status] = useState()
         const [Message,setmessage] = useState("")
         const [user,set_user] = useState({
@@ -31,13 +35,13 @@ const Apply = (props) =>
         {
             const fetch_courses = async () =>
             {
-                const result= await axios.post("http://localhost:9000/fetch_courses")
+                const result= await axiosJWT.get("http://localhost:9000/fetch_courses", {headers:{'authorization':"Bearer "+userAccessToken}})
                 set_courses(result)
             }
             fetch_courses();
             const fetch_user = async () =>
             {
-                const result2 = await axios.post("http://localhost:9000/fetch_TA",email)
+                const result2 = await axiosJWT.post("http://localhost:9000/fetch_TA",email, {headers:{'authorization':"Bearer "+userAccessToken}})
                 set_user(result2.data)
                 set_status(result2.data.Application_Status)
                 set_flag(1)
@@ -54,7 +58,7 @@ const Apply = (props) =>
             const fetch_faculty = async () =>
             {
                 const fac_email = {email : user.Faculty_Email}
-                const result3 = await axios.post("http://localhost:9000/fetch_faculty_by_email",fac_email)
+                const result3 = await axiosJWT.post("http://localhost:9000/fetch_faculty_by_email",fac_email, {headers:{'authorization':"Bearer "+userAccessToken}})
                 set_fac(result3.data)
                 set_flag(0);
             }
@@ -98,10 +102,17 @@ const Apply = (props) =>
             else
             {
                 set_status("Applied")
-                let T1 = new TA()
-                const response = await T1.set_choices(props.user_email,choices_temp.course1,choices_temp.course2,choices_temp.course3)
-                setmessage(response) 
-                const result2 = await axios.post("http://localhost:9000/fetch_TA",email)
+                const details = {
+                    Email:props.user_email,
+                    course1:choices_temp.course1,
+                    course2:choices_temp.course2,
+                    course3:choices_temp.course3,
+                    Application_Status:"Applied"
+                }
+                const response = await axiosJWT.post("http://localhost:9000/Set_choices", details, {headers:{'authorization':"Bearer "+userAccessToken}})
+                setmessage(response.data.message)  
+
+                const result2 = await axiosJWT.post("http://localhost:9000/fetch_TA",email, {headers:{'authorization':"Bearer "+userAccessToken}})
                 set_user(result2.data)
 
             }

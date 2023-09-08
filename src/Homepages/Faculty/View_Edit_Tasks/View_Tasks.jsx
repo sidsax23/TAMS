@@ -1,15 +1,18 @@
-import React, {useEffect,useState} from 'react'
+/*import React, {useEffect,useState} from 'react'
 import Header from '../../../Header/header.jsx'
 import './View_Tasks.css'
 import { Link, useLocation } from 'react-router-dom'
 import axios from 'axios'
-import {Faculty} from '../../../Classes/Users.tsx'
 import Completed_Tasks_Card from '../Completed_Tasks_Card/Completed_Tasks_Card.jsx'
 import Incomplete_Tasks_Card from '../Incomplete_Tasks_Card/Incomplete_Tasks_Card.jsx'
+import { useContext } from 'react';
+import {userContext} from '../App.jsx'
 
 const View_Tasks = (props) => 
 {
 
+    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+   
     const location=useLocation()
     const course = location.state.course
     const task_details = {
@@ -30,21 +33,21 @@ const View_Tasks = (props) =>
     {
         const fetch_TAs = async () =>
         {
-            const result2 = await axios.post("http://localhost:9000/fetch_TAs_by_course_faculty",details)
+            const result2 = await axiosJWT.post("http://localhost:9000/fetch_TAs_by_course_faculty",details, {headers:{'authorization':"Bearer "+userAccessToken}})
             set_TAs(result2.data)
         }
         fetch_TAs()
 
         const fetch_incomplete_tasks = async () =>
         {
-            const data= await axios.post("http://localhost:9000/fetch_incomplete_tasks",task_details)
+            const data= await axiosJWT.post("http://localhost:9000/fetch_incomplete_tasks",task_details, {headers:{'authorization':"Bearer "+userAccessToken}})
             set_incomplete_tasks(data)
         }
         fetch_incomplete_tasks();
 
         const fetch_completed_tasks = async () =>
         {
-            const data= await axios.post("http://localhost:9000/fetch_completed_tasks",task_details)
+            const data= await axiosJWT.post("http://localhost:9000/fetch_completed_tasks",task_details, {headers:{'authorization':"Bearer "+userAccessToken}})
             set_completed_tasks(data)
         }
         fetch_completed_tasks();
@@ -99,3 +102,4 @@ const View_Tasks = (props) =>
 }
 
 export default View_Tasks
+*/

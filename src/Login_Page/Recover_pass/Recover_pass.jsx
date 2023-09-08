@@ -45,15 +45,13 @@ function Reset_pass()
         {
             set_b1(0)
             set_b2(1)
-            set_b3(0)
-           
+            set_b3(0)  
         }
         else if(value=="Admin")
         {
             set_b1(0)
             set_b2(0)
             set_b3(1)
-      
         }
      }
 
@@ -92,8 +90,13 @@ function Reset_pass()
          }
          else
          {
-            console.log(user)
-            axios.post("http://localhost:9000/Recover_pass", user)
+            /*
+            We do not need to refresh any token here so we use axiosRecover (a new instance of axios) instead of "axios" 
+            as that would be intercepted and checked for the token but it doesn't exist yet as the user has 
+            not logged in
+            */
+            const axiosRecover = axios.create();
+            axiosRecover.post("http://localhost:9000/Recover_pass", user)
             .catch(err => console.log(err))
             .then(res =>  
             {

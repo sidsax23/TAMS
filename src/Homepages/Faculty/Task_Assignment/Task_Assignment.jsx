@@ -4,9 +4,14 @@ import './Task_Assignment.css'
 import { Link, useLocation } from 'react-router-dom'
 import axios from 'axios'
 import {Faculty} from '../../../Classes/Users.tsx'
+import { useContext } from 'react';
+import {userContext} from '../../../App.jsx'
+
 
 const Task_Assignment = (props) => 
 {
+    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+   
     const location=useLocation()
     const course = location.state.course
     const [details,set_details]=useState(
@@ -41,7 +46,7 @@ const Task_Assignment = (props) =>
     {
         const fetch_TAs = async () =>
         {
-            const result2 = await axios.post("http://localhost:9000/fetch_TAs_by_course_faculty",details)
+            const result2 = await axiosJWT.post("http://localhost:9000/fetch_TAs_by_course_faculty",details, {headers:{'authorization':"Bearer "+userAccessToken}})
             set_TAs(result2.data)
         }
         fetch_TAs()
@@ -137,9 +142,16 @@ const Task_Assignment = (props) =>
             else
             {
                 Task_Temp.Email=props.email
-                let F1 = new Faculty()
-                const response = await F1.Assign_Task(Task_Temp.name,Task_Temp.description,Task_Temp.deadline,Task_Temp.TA_Emails,Task_Temp.Email,course.code)
-                setmessage(response)
+                const task = {
+                    Name:Task_Temp.name,
+                    Description:Task_Temp.description,
+                    Deadline:Task_Temp.deadline,
+                    TA_Emails:Task_Temp.TA_Emails,
+                    Faculty_Email:Task_Temp.Email,
+                    Course_Code:course.code
+                }
+                const response = await axiosJWT.post("http://localhost:9000/Assign_Task", task, {headers:{'authorization':"Bearer "+userAccessToken}})
+                setmessage(response.data.message)  
             }
         }
         

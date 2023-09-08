@@ -3,15 +3,20 @@ import './profile.css'
 import Header from '../../../Header/header.jsx'
 import { useState } from 'react'
 import axios from 'axios'
+import { useContext } from 'react';
+import {userContext} from '../../../App.jsx'
 
 
 function TA_Profile(props) 
 {
+  const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+   
     const [TA_name,set_TA_name]=useState("")
     const [TA_dept,set_dept]=useState("")
     const [dummy,set_dummy]=useState("")
     const [TA_image_url,set_image_url] = useState("")
     const [TA_phone_num,set_phone_num]=useState("")
+    const [pass_copy,set_pass_copy] =useState("")
 
     const [Message,setmessage] = useState("")
     const [show,setshow] = useState(false)
@@ -23,13 +28,14 @@ function TA_Profile(props)
         email:"",
         TA_name_new:"",
         TA_phone_num_new:"",
-        TA_image_url_new:""
+        TA_image_url_new:"",
+        TA_pass_new:""
     })
     const [axios_call_count,set_call_count]=useState(0)
 
     if(axios_call_count==0||update==false)
     {
-      axios.post("http://localhost:9000/TA_Profile",props).then(
+      axiosJWT.post("http://localhost:9000/TA_Profile",props, {headers:{'authorization':"Bearer "+userAccessToken}}).then(
         res => {
                   console.log(res)
                   set_call_count(1)
@@ -55,19 +61,26 @@ function TA_Profile(props)
         setshow(false)
         setmessage("")
         const {name,value} = e.target
-        SetTA({
-            ...TA, /* Stores the value entered by the TA in the respective state variable while the rest remain as their default values ("" in this case)*/
-            [name]:value /* Depending on the name of the inputbar, its value is stored in the respective state variable*/
-        })
+        if(name=="pass_copy")
+        {
+          set_pass_copy(value);
+        }
+        else
+        {
+            SetTA({
+                ...TA, /* Stores the value entered by the TA in the respective state variable while the rest remain as their default values ("" in this case)*/
+                [name]:value /* Depending on the name of the inputbar, its value is stored in the respective state variable*/
+            })
+        }
     }
 
     const Save_Changes = () =>
     {
         set_update(false)
         setshow(true)
-        const {email,TA_name_new,TA_phone_num_new,TA_image_url_new} = TA
+        const {email,TA_name_new,TA_phone_num_new,TA_image_url_new,TA_pass_new} = TA
         TA.email=props.email
-        if(!TA_name_new&&!TA_phone_num_new&&!TA_image_url_new)
+        if(!TA_name_new&&!TA_phone_num_new&&!TA_image_url_new&&!TA_pass_new)
         {
             setmessage("Please enter new data")
         }
@@ -87,9 +100,13 @@ function TA_Profile(props)
         {
             setmessage("Please enter a valid phone number")
         }
+        else if(TA.TA_pass_new != pass_copy)
+        {
+          setmessage("Please repeat the password correctly.")
+        }
         else
         {
-            axios.put("http://localhost:9000/Update_TA_Profile", TA)
+            axiosJWT.put("http://localhost:9000/Update_TA_Profile", TA, {headers:{'authorization':"Bearer "+userAccessToken}})
             .then( res=> {setmessage(res.data.message)} )
         }
 
@@ -116,6 +133,12 @@ function TA_Profile(props)
                   <h3>Phone Number &emsp;: &emsp;{TA_phone_num}<br/><input name="TA_phone_num_new" type="text" placeholder="Enter New Phone Number" className='details_input' onChange={HandleChange} value={TA.TA_phone_num_new}/></h3>
                   <br/>
                   <h3>Department &emsp;: &emsp;{TA_dept}</h3>
+                  <br/>
+                  <br/>
+                  <h3>New Password &emsp;: &emsp;<br/><input name="TA_pass_new" placeholder="Enter New Password" className='details_input' onChange={HandleChange} value={TA.TA_pass_new}/></h3>
+                  <br/>
+                  <input name="pass_copy" placeholder="Repeat Password" className='details_input' onChange={HandleChange} value={pass_copy}/>
+                  <br/>
                   <br/>
                 </div>
                 <div className="ErrorMsg">{show && Message!=="Profile Updated Successfully." ? Message : ""}</div>

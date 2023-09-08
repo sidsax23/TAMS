@@ -1,15 +1,17 @@
-import React,{useState,Component} from 'react'
+import React,{useState,useContext} from 'react'
 import './Login_page.css'
 import Logo from './Assets/Transparent_Logo.png'
 import {Link} from 'react-router-dom'
 import '../index.css'
 import axios from 'axios'
 import {useNavigate} from 'react-router-dom'
+import {userContext} from '../App.jsx'
 
 
-function Login_page(props)
+function Login_page()
 {
     let navigate = useNavigate()
+    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken] = useContext(userContext);
     /* Storing Message */
     const [Message,setmessage] = useState("")
     const [b1,set_b1] = useState(1)
@@ -77,10 +79,19 @@ function Login_page(props)
         }
         else
         {  
-            axios.post("http://localhost:9000/Login", user)
-            .then(res=> {
+            /*
+            We do not need to refresh any token here so we use axiosLogin (a new instance of axios) instead of "axios" 
+            as that would be intercepted and checked for the token but it doesn't exist yet as the user has 
+            not logged in
+            */
+            const axiosLogin = axios.create();
+            axiosLogin.post("http://localhost:9000/Login", user)
+            .then(res => {
                             setmessage(res.data.message)
-                            props.setloginuser(res.data.user)
+                            setUserEmail(res.data.userEmail)
+                            setUserType(res.data.userType)
+                            setUserAccessToken(res.data.accessToken)
+                            setUserRefreshToken(res.data.refreshToken)
                             navigate("/",{replace:true} )
                       })
         }

@@ -3,9 +3,13 @@ import './Incomplete_Task_Card_TA.css'
 import axios from 'axios'
 import { format, parseISO } from 'date-fns'
 import {TA} from '../../../Classes/Users.tsx'
+import { useContext } from 'react';
+import {userContext} from '../../../App.jsx'
 
 const Incomplete_Tasks_Card_TA = (props) => {
 
+    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+   
     const days = [ "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" ];
     const [show,set_show]=useState("")
     const [Message,set_message]=useState("")
@@ -61,9 +65,13 @@ const Incomplete_Tasks_Card_TA = (props) => {
         {  
             
             set_update(false)
-            let T1 = new TA()
-            const response = await T1.Update_Task_Status(status,incomplete_task._id,index)
-            set_message(response) 
+            const details = {
+                Status:status,
+                id:incomplete_task._id,
+                index:index
+            }
+            const response = await axiosJWT.post("http://localhost:9000/Update_Task_Status", details, {headers:{'authorization':"Bearer "+userAccessToken}})
+            set_message(response.data.message)   
         }
 
     }
@@ -72,7 +80,7 @@ const Incomplete_Tasks_Card_TA = (props) => {
     {
         const fetch_incomplete_tasks = async () =>
         {
-            const result= await axios.post("http://localhost:9000/fetch_incomplete_task_id",id)
+            const result= await axiosJWT.post("http://localhost:9000/fetch_incomplete_task_id",id, {headers:{'authorization':"Bearer "+userAccessToken}})
             set_incomplete_task(result.data)
             Setter(result.data)
             set_status_old(status)

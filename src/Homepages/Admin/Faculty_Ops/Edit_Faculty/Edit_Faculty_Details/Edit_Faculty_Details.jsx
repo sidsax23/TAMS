@@ -4,10 +4,15 @@ import Header from '../../../../../Header/header.jsx'
 import { useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import { useContext } from 'react';
+import {userContext} from '../../../../../App.jsx'
 
 
 function Edit_Faculty_Details(props) 
 {
+
+    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+
     const location=useLocation()
     const Faculty_details = location.state.Faculty 
     const Faculty_id = {id:Faculty_details._id}
@@ -49,14 +54,14 @@ function Edit_Faculty_Details(props)
 
     if(axios_call_count==0||update==false)
     {
-      axios.post("http://localhost:9000/Faculty_Profile",Faculty_id).then(
+      axiosJWT.post("http://localhost:9000/Faculty_Profile",Faculty_id, {headers:{'authorization':"Bearer "+userAccessToken}}).then(
         res => {
                   set_call_count(1)
                   set_update(true)
                   res.data.found ? Set_details(res) : set_dummy()
                })
-      axios.post("http://localhost:9000/fetch_TAs_email_array",Faculty_details.TA_Emails).then(response=>{set_details_2(response,Faculty_details.TA_Emails)})
-      axios.post("http://localhost:9000/fetch_courses").then(res=>{set_all_courses(res.data)}) 
+      axiosJWT.post("http://localhost:9000/fetch_TAs_email_array",Faculty_details.TA_Emails, {headers:{'authorization':"Bearer "+userAccessToken}}).then(response=>{set_details_2(response,Faculty_details.TA_Emails)})
+      axiosJWT.get("http://localhost:9000/fetch_courses", {headers:{"authorization":"Bearer "+userAccessToken}}).then(res=>{set_all_courses(res.data)}) 
        function Set_details(res)
        {
          set_Faculty_email(res.data.email)
@@ -209,7 +214,7 @@ function Edit_Faculty_Details(props)
             }
             else
             {
-                axios.put("http://localhost:9000/Update_Faculty_Profile", Faculty)
+                axiosJWT.put("http://localhost:9000/Update_Faculty_Profile", Faculty, {headers:{'authorization':"Bearer "+userAccessToken}})
                 .then( res=> {setmessage(res.data.message)})
             }
         }

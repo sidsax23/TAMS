@@ -4,9 +4,13 @@ import './Add_TA.css'
 import {Admin} from '../../../../Classes/Users.tsx'
 import Papa from 'papaparse'
 import {Link} from 'react-router-dom'
+import { useContext } from 'react'
+import {userContext} from '../../../../App.jsx'
 
 const Add_TA = (props) => 
 {
+    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+    
         const [Message,setmessage] = useState("")
         const [Message2,setmessage2] = useState("")
         const [bulk_email_flag,set_bulk_email_flag] = useState(false)
@@ -67,9 +71,17 @@ const Add_TA = (props) =>
             }
             else
             {
-                let A1 = new Admin()
-                const response = await A1.Create_TA(TA_temp.name,TA_temp.email,TA_temp.pass,Number(TA_temp.contact_num))
-                setmessage(response)                 
+                const TA = {
+                    Name:TA_temp.name,
+                    Email:TA_temp.email,
+                    Type:"TA",
+                    Pass:TA_temp.pass,
+                    Contact_Num:Number(TA_temp.contact_num),
+                    Dept:"CSIS",
+                    Application_Status:"Yet to Apply"
+                }
+                const response = await axiosJWT.post("http://localhost:9000/Add_TA", TA, {headers:{'authorization':"Bearer "+userAccessToken}})
+                setmessage(response.data.message)              
             }
         }
 
@@ -156,11 +168,19 @@ const Add_TA = (props) =>
             setshow(true)
             if(bulk_phone_num_flag==false&&bulk_email_flag==false&&no_file_flag==false&&duplicate_email_flag==false&&missing_password_flag==false)
             {
-                let A1 = new Admin()
                 for(var i=0;i<student_count;i++)
                 {
-                    const response = await A1.Create_TA(bulk_data[i][0],bulk_data[i][1],bulk_data[i][2],Number(bulk_data[i][3]))
-                    if(response!="Student Successfully Added")
+                    const TA = {
+                        Name:bulk_data[i][0],
+                        Email:bulk_data[i][1],
+                        Type:"TA",
+                        Pass:bulk_data[i][2],
+                        Contact_Num:Number(bulk_data[i][3]),
+                        Dept:"CSIS",
+                        Application_Status:"Yet to Apply"
+                    }
+                    const response = await axiosJWT.post("http://localhost:9000/Add_TA", TA, {headers:{'authorization':"Bearer "+userAccessToken}})
+                    if(response.data.message!="Student Successfully Added")
                     {
                         console.log("Student (with Email ID ",bulk_data[i][1],") could not be uploaded. Error : ",response)
                     }
@@ -203,8 +223,8 @@ const Add_TA = (props) =>
                         <h3>Contact Number &emsp;: <br/><input type="Number" name="contact_num" placeholder="Enter Student Contact Number" className='details_input' onChange={HandleChange} value={TA_temp.contact_num}/></h3>
                         <br/>
                     </div>
-                    <div className="ErrorMsg">{show && Message!=="Student Successfully Added" ? Message : ""}</div>
-                    <div className="SuccessMsg">{show && Message=="Student Successfully Added" ? Message : ""}</div>
+                    <div className="ErrorMsg">{show && Message!=="Student Successfully Added!" ? Message : ""}</div>
+                    <div className="SuccessMsg">{show && Message=="Student Successfully Added!" ? Message : ""}</div>
                     <div className='btn' onClick={Save_Changes}>ADD</div>
                     <br/>
                     <br/>

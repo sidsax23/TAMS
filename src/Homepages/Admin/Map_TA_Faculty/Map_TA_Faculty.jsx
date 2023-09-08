@@ -3,9 +3,13 @@ import './Map_TA_Faculty.css'
 import Header from '../../../Header/header.jsx'
 import Faculty_Card from './Faculty_Card/Faculty_Card.jsx'
 import axios from 'axios'
+import { useContext } from 'react';
+import {userContext} from '../../../App.jsx'
 
 function Map_TA_Faculty(props)
 {
+    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+   
     const [faculties,set_faculties] = useState()
 
     //Fetching items once, when the page loads
@@ -13,9 +17,8 @@ function Map_TA_Faculty(props)
     {
         const fetch_faculties = async () =>
         {
-            const data= await axios.post("http://localhost:9000/fetch_faculties")
+            const data= await axiosJWT.get("http://localhost:9000/fetch_faculties", {headers:{'authorization':"Bearer "+userAccessToken}})
             set_faculties(data)
-            console.log(data)
         }
         fetch_faculties();
 

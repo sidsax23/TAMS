@@ -14,7 +14,7 @@ import Faculty_homepage from './Homepages/Faculty/Faculty_Homepage.jsx'
 import Faculty_Profile from './Homepages/Profile_Page/Faculty_Profile_Page.jsx'
 import Task_Assignment from './Homepages/Faculty/Task_Assignment/Task_Assignment.jsx'
 import Course_Page from './Homepages/Faculty/Course_Page/Course_Page.jsx'
-import View_Tasks from './Homepages/Faculty/View_Tasks/View_Tasks.jsx'
+import View_Edit_Tasks from './Homepages/Faculty/View_Edit_Tasks/View_Edit_Tasks.jsx'
 import Ops from './Homepages/Admin/Ops.jsx'
 import Edit_TA from './Homepages/Admin/TA_Ops/Edit_TA/Edit_TA.jsx'
 import Edit_TA_Details from './Homepages/Admin/TA_Ops/Edit_TA/Edit_TA_Details/Edit_TA_Details.jsx'
@@ -23,131 +23,197 @@ import Edit_Faculty from './Homepages/Admin/Faculty_Ops/Edit_Faculty/Edit_Facult
 import Edit_Faculty_Details from './Homepages/Admin/Faculty_Ops/Edit_Faculty/Edit_Faculty_Details/Edit_Faculty_Details.jsx'
 import Edit_Course from './Homepages/Admin/Course_Ops/Edit_Course/Edit_Course.jsx'
 import Edit_Course_Details from './Homepages/Admin/Course_Ops/Edit_Course/Edit_Course_Details/Edit_Course_Details.jsx'
+import Edit_Task_Details from './Homepages/Faculty/View_Edit_Tasks/Edit_Task_Details/Edit_Task_Details.jsx'
 import {Routes, BrowserRouter as Router, Route} from 'react-router-dom' /*Routes = Switch-case from C++*/
+import axios from 'axios'
+import jwt_decode from 'jwt-decode'
 
 
 function App() 
 {
-  const [user,setloginuser] = useState({})
+  const [userEmail,setUserEmail] = useState(null)
+  const [userType,setUserType] = useState(null)
+  const [userAccessToken,setUserAccessToken] = useState(null)
+  const [userRefreshToken,setUserRefreshToken] = useState(null)
+
+  //Refreshing the access token once it expires
+  const refreshToken = async() =>
+  {
+    var accessToken=null;
+    try
+    {
+      const token ={
+        token:userRefreshToken
+      }
+      await axios.post("http://localhost:9000/Refresh",token).then(async(res)=>{
+        setUserAccessToken(res.data.accessToken);
+        setUserRefreshToken(res.data.refreshToken);
+        accessToken=res.data.accessToken;
+      })
+      return accessToken;
+    }
+    catch(err)
+    {
+      console.log(err);
+    }
+  }
+
+  //To Refresh the token automatically, we can use axios interceptors
+  /*
+  Axios interceptors are functions that are called before a request is sent and after a response is received. 
+  The official doc mentions that you can “intercept” requests and responses before they are handled.
+  */
+  const axiosJWT =axios.create()
+  axiosJWT.interceptors.request.use( async (config) => 
+  {
+      let currentDate = new Date();
+      //Decoding the token to see its expiry
+      const decodedToken = jwt_decode(userAccessToken);
+      //checking if it is expired
+      if (decodedToken.exp * 1000 < currentDate.getTime()) {
+        
+        const data=await refreshToken()
+        //Add new token to header of the axios call that was intercepted with the expired token
+        config.headers["authorization"] = "Bearer "+data;
+      }
+      return config;
+  },
+  //Reject everything if there is an error
+  (error) =>
+  {
+    return Promise.reject(error)
+  }
+  )
+
+
+
+  
   return (
-    <> 
+    //Context will be avaiable to all components inside this and since all components are called here, it may be considered global
+    <userContext.Provider value={[userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT]}> 
     <Router>
       <Routes>
 		    <Route exact path="/" element =
           {
-            user && user._id ? (user.type=="TA" ? <TA_homepage setloginuser={setloginuser} email={user.email}/> : user.type=="Faculty" ? <Faculty_homepage setloginuser={setloginuser} courses={user.courses}/> : user.type=="Admin" ? <Admin_homepage setloginuser={setloginuser}/> : <Login_page setloginuser={setloginuser}/> ) : <Login_page setloginuser={setloginuser}/>
+            userEmail ? (userType=="TA" ? <TA_homepage email={userEmail}/>  : userType=="Faculty" ? <Faculty_homepage/> : userType=="Admin" ? <Admin_homepage/> : <Login_page/> ) : <Login_page/>
           }
         />
         <Route exact path="/Login" element =
           {
-            <Login_page setloginuser={setloginuser}/>
+            <Login_page />
           }
         /> 
         <Route exact path="/Recover_pass" element =
         {
-          <Recover_pass setloginuser={setloginuser}/>
+          <Recover_pass/>
         }
         />   
         <Route exact path="/Add_TA" element =
           {
-            user && user._id && user.type=="Admin" ? <Add_TAs setloginuser={setloginuser}/> : <Login_page setloginuser={setloginuser}/>
+            userEmail && userType=="Admin" ? <Add_TAs/> : <Login_page/>
           }
         />
         <Route exact path="/Add_Faculty" element =
           {
-            user && user._id && user.type=="Admin"? <Add_Faculty setloginuser={setloginuser}/> : <Login_page setloginuser={setloginuser}/>
+            userEmail && userType=="Admin"? <Add_Faculty/> : <Login_page/>
           }
         />
         <Route exact path="/Add_Course" element =
           {
-            user && user._id && user.type=="Admin" ? <Add_Course setloginuser={setloginuser}/> : <Login_page setloginuser={setloginuser}/>
+            userEmail && userType=="Admin" ? <Add_Course/> : <Login_page/>
           }
         />
         <Route exact path="/Apply" element =
           {
-            user && user._id && user.type=="TA" ? <Apply setloginuser={setloginuser} user_email={user.email}/> : <Login_page setloginuser={setloginuser}/>
+            userEmail && userType=="TA" ? <Apply  user_email={userEmail} /> : <Login_page/>
           }
         />
         <Route exact path="/Map" element =
           {
-            user && user._id && user.type=="Admin" ? <Mapping setloginuser={setloginuser}/> : <Login_page setloginuser={setloginuser}/>
+            userEmail && userType=="Admin" ? <Mapping/> : <Login_page/>
           }
         />
         <Route exact path="/Faculty_Page" element =
           {
-            user && user._id && user.type=="Admin" ? <Faculty_Page setloginuser={setloginuser}/> : <Login_page setloginuser={setloginuser}/>
+            userEmail && userType=="Admin" ? <Faculty_Page/> : <Login_page/>
           }
         />
         <Route exact path="/faculty_profile" element =
         {
-          user && user._id && user.type=="Faculty" ? <Faculty_Profile setloginuser={setloginuser} email={user.email} TA_Emails={user.TA_Emails}/> : <Login_page setloginuser={setloginuser}/>
+          userEmail && userType=="Faculty" ? <Faculty_Profile  email={userEmail} /> : <Login_page/>
         }
         />
         <Route exact path="/Course_Page" element =
         {
-          user && user._id && user.type=="Faculty" ? <Course_Page setloginuser={setloginuser} email={user.email}/> : <Login_page setloginuser={setloginuser}/>
+          userEmail && userType=="Faculty" ? <Course_Page  email={userEmail} /> : <Login_page/>
         }
         />
         <Route exact path="/Assign_Task_Page" element =
         {
-          user && user._id && user.type=="Faculty" ? <Task_Assignment setloginuser={setloginuser} email={user.email}/> : <Login_page setloginuser={setloginuser}/>
+          userEmail && userType=="Faculty" ? <Task_Assignment  email={userEmail} /> : <Login_page/>
         }
         />
-        <Route exact path="/View_Tasks_Page" element =
+        <Route exact path="/View_Edit_Tasks_Page" element =
         {
-          user && user._id && user.type=="Faculty" ? <View_Tasks setloginuser={setloginuser} email={user.email}/> : <Login_page setloginuser={setloginuser}/>
+          userEmail && userType=="Faculty" ? <View_Edit_Tasks  email={userEmail} /> : <Login_page/>
         }
         />
         <Route exact path="/Ops" element =
         {
-          user && user._id && user.type=="Admin" ? <Ops setloginuser={setloginuser} email={user.email}/> : <Login_page setloginuser={setloginuser}/>
+          userEmail && userType=="Admin" ? <Ops  email={userEmail} /> : <Login_page/>
         }
         />
         <Route exact path="/admin_profile" element =
         {
-          user && user._id && user.type=="Admin" ? <Admin_Profile setloginuser={setloginuser} email={user.email}/> : <Login_page setloginuser={setloginuser}/>
+          userEmail && userType=="Admin" ? <Admin_Profile  email={userEmail} /> : <Login_page/>
         }
         />
         <Route exact path="/Edit_TA" element =
         {
-          user && user._id && user.type=="Admin" ? <Edit_TA setloginuser={setloginuser} email={user.email}/> : <Login_page setloginuser={setloginuser}/>
+          userEmail && userType=="Admin" ? <Edit_TA  email={userEmail} /> : <Login_page/>
         }
         />
         <Route exact path="/Edit_TA_Details" element =
         {
-          user && user._id && user.type=="Admin" ? <Edit_TA_Details setloginuser={setloginuser}/> : <Login_page setloginuser={setloginuser}/>
+          userEmail && userType=="Admin" ? <Edit_TA_Details/> : <Login_page/>
         }
         />
         <Route exact path="/ta_profile" element =
         {
-          user && user._id && user.type=="TA" ? <TA_Profile_Page setloginuser={setloginuser} email={user.email}/> : <Login_page setloginuser={setloginuser}/>
+          userEmail && userType=="TA" ? <TA_Profile_Page  email={userEmail} /> : <Login_page/>
         }
         />
         <Route path="/Edit_Faculty" element =
         {
-          user && user._id && user.type=="Admin" ? <Edit_Faculty setloginuser={setloginuser} email={user.email}/> : <Login_page setloginuser={setloginuser}/>
+          userEmail && userType=="Admin" ? <Edit_Faculty  email={userEmail} /> : <Login_page/>
         }
         />
         <Route exact path="/Edit_Faculty_Details" element =
         {
-          user && user._id && user.type=="Admin" ? <Edit_Faculty_Details setloginuser={setloginuser}/> : <Login_page setloginuser={setloginuser}/>
+          userEmail && userType=="Admin" ? <Edit_Faculty_Details/> : <Login_page/>
         }
         />
          <Route path="/Edit_Course" element =
         {
-          user && user._id && user.type=="Admin" ? <Edit_Course setloginuser={setloginuser} email={user.email}/> : <Login_page setloginuser={setloginuser}/>
+          userEmail && userType=="Admin" ? <Edit_Course  email={userEmail} /> : <Login_page/>
         }
         />
         <Route exact path="/Edit_Course_Details" element =
         {
-          user && user._id && user.type=="Admin" ? <Edit_Course_Details setloginuser={setloginuser}/> : <Login_page setloginuser={setloginuser}/>
+          userEmail && userType=="Admin" ? <Edit_Course_Details/> : <Login_page/>
+        }
+        />
+        <Route exact path="/Edit_Task_Details" element =
+        {
+          userEmail && userType=="Faculty" ? <Edit_Task_Details  email={userEmail} /> : <Login_page/>
         }
         />
         
 	    </Routes>
     </Router>
-    </>
+    </userContext.Provider>
   );
 }
 
 export default App
+export const userContext = React.createContext()

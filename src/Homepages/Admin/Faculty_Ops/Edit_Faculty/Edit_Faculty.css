@@ -14,6 +14,15 @@
 
 }
 
+.item_box
+{
+    border-radius : 1rem;
+    padding: 0.5rem;
+    margin: 1%;
+    width: 98%;
+    height: max-content;
+    background-color: rgba(255, 255, 255, 0.95);
+}
 
 .export_btn, .small_btn
 {

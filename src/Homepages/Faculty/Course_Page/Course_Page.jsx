@@ -6,10 +6,14 @@ import axios from 'axios'
 import {Faculty} from '../../../Classes/Users.tsx'
 import {BsListTask} from 'react-icons/bs'
 import {FaTasks} from 'react-icons/fa'
+import { useContext } from 'react';
+import {userContext} from '../../../App.jsx'
 
 const Course_Page = (props) => 
 {
 
+    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+   
     const location=useLocation()
     const course = location.state.course
     const [TAs,set_TAs] = useState([""])
@@ -25,7 +29,7 @@ const Course_Page = (props) =>
     {
         const fetch_TAs = async () =>
         {
-            const result2 = await axios.post("http://localhost:9000/fetch_TAs_by_course_faculty",details)
+            const result2 = await axiosJWT.post("http://localhost:9000/fetch_TAs_by_course_faculty",details, {headers:{'authorization':"Bearer "+userAccessToken}})
             set_TAs(result2.data)
         }
         fetch_TAs()
@@ -55,9 +59,9 @@ const Course_Page = (props) =>
                     <BsListTask size={50}/>
                     &emsp;ASSIGN TASK
                 </Link>
-            <Link to="/View_Tasks_Page" className='Task_card' state= {{course:course}}>
+            <Link to="/View_Edit_Tasks_Page" className='Task_card' state= {{course:course}}>
                 <FaTasks size={50}/>
-                &emsp;VIEW TASKS
+                &emsp;VIEW/EDIT TASKS
             </Link>
             </center>
         </div>

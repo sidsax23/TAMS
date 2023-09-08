@@ -3,10 +3,14 @@ import './profile.css'
 import Header from '../../Header/header.jsx'
 import { useState } from 'react'
 import axios from 'axios'
+import { useContext } from 'react';
+import {userContext} from '../../App.jsx'
 
 
 function Faculty_Profile(props) 
 {
+    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+   
     const [faculty_name,set_faculty_name]=useState("")
     const [dummy,setdummy]=useState("")
     const [faculty_dept,set_dept]=useState("")
@@ -18,6 +22,7 @@ function Faculty_Profile(props)
     const [TAs,set_TAs] = useState()
     const [TA_Names,set_TA_Names]=useState(["","","","",""])
     var arr=[]
+    const [pass_copy,set_pass_copy] =useState("")
 
 
     const [Message,setmessage] = useState("")
@@ -32,19 +37,21 @@ function Faculty_Profile(props)
         faculty_phone_num_new:"",
         faculty_TAs_Req_new:"",
         faculty_image_url_new:"",
+        faculty_pass_new:""
     })
     const [axios_call_count,set_call_count]=useState(0)
 
     if(axios_call_count==0||update==false)
     {
-      axios.post("http://localhost:9000/Faculty_Profile",props).then(
+      axiosJWT.post("http://localhost:9000/Faculty_Profile",props, {headers:{'authorization':"Bearer "+userAccessToken}}).then(
         res => {
                   set_call_count(1)
                   set_update(true)
                   res.data.found ? Set_details(res) : setdummy()
+                  axiosJWT.post("http://localhost:9000/fetch_TAs_email_array",res.data.TA_Emails, {headers:{'authorization':"Bearer "+userAccessToken}}).then(response=>{set_details_2(response,res.data.TA_Emails)})
                })
 
-       axios.post("http://localhost:9000/fetch_TAs_email_array",props.TA_Emails).then(response=>{set_details_2(response,props.TA_Emails)})
+       
       function Set_details(res)
       {
         set_faculty_name(res.data.name)
@@ -95,19 +102,26 @@ function Faculty_Profile(props)
         setshow(false)
         setmessage("")
         const {name,value} = e.target
-        Setfaculty({
-            ...faculty, /* Stores the value entered by the faculty in the respective state variable while the rest remain as their default values ("" in this case)*/
-            [name]:value /* Depending on the name of the inputbar, its value is stored in the respective state variable*/
-        })
+        if(name=="pass_copy")
+        {
+          set_pass_copy(value);
+        }
+        else
+        {
+            Setfaculty({
+                ...faculty, /* Stores the value entered by the faculty in the respective state variable while the rest remain as their default values ("" in this case)*/
+                [name]:value /* Depending on the name of the inputbar, its value is stored in the respective state variable*/
+            })
+        }
     }
 
     const Save_Changes = () =>
     {
         set_update(false)
         setshow(true)
-        const {email,faculty_name_new,faculty_phone_num_new,faculty_TAs_Req_new,faculty_image_url_new} = faculty
+        const {email,faculty_name_new,faculty_phone_num_new,faculty_TAs_Req_new,faculty_image_url_new,faculty_pass_new} = faculty
         faculty.email=props.email
-        if(!faculty_name_new&&!faculty_phone_num_new&&!faculty_TAs_Req_new&&!faculty_image_url_new)
+        if(!faculty_name_new&&!faculty_phone_num_new&&!faculty_TAs_Req_new&&!faculty_image_url_new&&!faculty_pass_new)
         {
             setmessage("Please enter new data")
         }
@@ -131,9 +145,13 @@ function Faculty_Profile(props)
         {
             setmessage("Please enter a valid phone number")
         }
+        else if(faculty.faculty_pass_new != pass_copy)
+        {
+          setmessage("Please repeat the password correctly.")
+        }
         else
         {
-            axios.put("http://localhost:9000/Update_Faculty_Profile", faculty)
+            axiosJWT.put("http://localhost:9000/Update_Faculty_Profile", faculty, {headers:{'authorization':"Bearer "+userAccessToken}})
             .then( res=> {setmessage(res.data.message)} )
         }
 
@@ -161,6 +179,12 @@ function Faculty_Profile(props)
                   <br/>
                   <h3>Department &emsp;: &emsp;{faculty_dept}</h3>
                   <br/>
+                  <br/>
+                  <h3>New Password &emsp;: &emsp;<br/><input name="faculty_pass_new" placeholder="Enter New Password" className='details_input' onChange={HandleChange} value={faculty.faculty_pass_new}/></h3>
+                  <br/>
+                  <input name="pass_copy" placeholder="Repeat Password" className='details_input' onChange={HandleChange} value={pass_copy}/>
+                  <br/>
+                  <br/>
                   <h3>TAs Required &emsp;: &emsp;{faculty_TAs_Req==-1?"NA":faculty_TAs_Req}<br/><input name="faculty_TAs_Req_new" type="Number" placeholder="Enter TAs Required" className='details_input' onChange={HandleChange} value={faculty.faculty_TAs_Req_new}/></h3>
                   <br/>
                   <h2>Course(s) Offered &emsp;:- &emsp;</h2>{courses.filter(course => course!="").map((course)=>(<h3>{course}</h3>))}<br/>
@@ -178,6 +202,7 @@ function Faculty_Profile(props)
                     }
                     
                   <br/>
+                  
                 </div>
                 <div className="ErrorMsg">{show && Message!=="Profile Updated Successfully." ? Message : ""}</div>
                 <div className="SuccessMsg">{show && Message=="Profile Updated Successfully." ? Message : ""}</div>

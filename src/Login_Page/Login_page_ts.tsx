@@ -101,7 +101,7 @@ class Login_page extends Component<{},any>
             else
             {
                 let navigate = useNavigate()
-                axios.post("http://localhost:9000/Login", user)
+                axiosJWT.post("http://localhost:9000/Login", user)
                 .then(res=> {
                             this.setState({Message:res.data.message})
                             //this.props.setloginuser(res.data.user)

@@ -3,10 +3,13 @@ import './Course_Card.css'
 import {Link} from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import axios from 'axios'
+import { useContext } from 'react';
+import {userContext} from '../../../App.jsx'
 
 const Course_Card = ({code}) => 
 {
-    
+    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+   
     const course_code = {course_code:code}
     
     const [course,set_course]=useState("")
@@ -14,7 +17,7 @@ const Course_Card = ({code}) =>
     {
         const fetch_course = async () =>
         {
-            const result = await axios.post("http://localhost:9000/fetch_course",course_code)
+            const result = await axiosJWT.post("http://localhost:9000/fetch_course",course_code, {headers:{'authorization':"Bearer "+userAccessToken}})
             set_course(result.data)  
         }
         fetch_course();
