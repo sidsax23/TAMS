@@ -26,17 +26,12 @@ const View_Edit_Tasks = (props) => {
   const [inner_popup2_message,set_inner_popup2_message] = useState("")
   const location=useLocation()
   const course = location.state.course
-  const task_details = {
-    fac_email:props.email,
-    course_code:course.code
-}
-
 
   const get_tasks = async() =>
   {
     try 
     {
-      const response = await axiosJWT.post("http://localhost:9000/fetch_tasks",task_details, {headers:{'authorization':"Bearer "+userAccessToken}})
+      const response = await axiosJWT.get(`http://localhost:9000/fetch_tasks?fac_email=${props.email}&course_code=${course.code}`, {headers:{'authorization':"Bearer "+userAccessToken}})
       set_tasks(response.data)
       set_filtered_tasks(response.data)
     } 
@@ -190,7 +185,7 @@ const View_Edit_Tasks = (props) => {
       task_Details.ids.push(selected_data[i]._id)
     }
     
-    axiosJWT.post("http://localhost:9000/Delete_Tasks", task_Details, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
+    axiosJWT.delete(`http://localhost:9000/Delete_Tasks?id=${task_Details.ids}`, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
     {
       set_inner_popup1_message(res.data)
       set_popup1(false)
@@ -211,7 +206,7 @@ const View_Edit_Tasks = (props) => {
       task_Details.ids.push(selected_data[i]._id)
     }
     
-    axiosJWT.post("http://localhost:9000/Reset_Tasks", task_Details, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
+    axiosJWT.put("http://localhost:9000/Reset_Tasks", task_Details, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
     {
       set_inner_popup2_message(res.data)
       set_popup2(false)

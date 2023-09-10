@@ -4,6 +4,7 @@ import Logo from './Assets/Transparent_Logo.png'
 import {CgProfile} from 'react-icons/cg'
 import {Link} from 'react-router-dom'
 import {userContext} from '../App.jsx'
+import {logout} from '../login_functions.jsx' 
 
 const Header = (props) => 
 {
@@ -20,14 +21,9 @@ const Header = (props) =>
                     <center>{props.type}</center>
                 </div>
                 <div className="logout_btn" 
-                    onClick={async () => 
+                    onClick={() => 
                                 {
-                                    setUserEmail(null)
-                                    setUserType(null)
-                                    const token={
-                                        token:userRefreshToken
-                                    }
-                                    await axiosJWT.post("http://localhost:9000/Logout",token, {headers:{'authorization':"Bearer "+userAccessToken}})
+                                    logout(setUserEmail,setUserType,userAccessToken,userRefreshToken,axiosJWT)
                                 }}>
                     Logout
                 </div>

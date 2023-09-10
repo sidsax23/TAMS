@@ -98,7 +98,7 @@ const Edit_Course = (props) => {
       Course_Details.codes.push(selected_data[i].code)
     }
     
-    axiosJWT.post("http://localhost:9000/Delete_Courses", Course_Details, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
+    axiosJWT.delete(`http://localhost:9000/Delete_Courses?ids=${Course_Details.ids}&codes=${Course_Details.codes}`, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
     {
 
       set_inner_popup1_message(res.data)
@@ -119,7 +119,7 @@ const Edit_Course = (props) => {
        Course_Details.codes.push(selected_data[i].code)
      }
      
-     axiosJWT.post("http://localhost:9000/Reset_TA-Ship_Courses", Course_Details, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
+     axiosJWT.put("http://localhost:9000/Reset_TA-Ship_Courses", Course_Details, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
      {
        set_inner_popup2_message(res.data)
        set_popup2(false)

@@ -115,7 +115,7 @@ function Admin_Profile(props)
     return(
         <div>
             
-            <Header login_state={props} type={"admin"}/>
+            <Header login_state={props} type={"Admin"}/>
               <div className='profile_box'>
                 <center><h1>My Profile</h1>
                 <br/>

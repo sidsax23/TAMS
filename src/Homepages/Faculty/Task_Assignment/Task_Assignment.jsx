@@ -14,13 +14,6 @@ const Task_Assignment = (props) =>
    
     const location=useLocation()
     const course = location.state.course
-    const [details,set_details]=useState(
-        {
-            Faculty_Email : props.email,
-            Course_Code : course.code
-        }
-
-    )
     const [TAs,set_TAs] = useState([""])
 
     var arr=[]
@@ -46,7 +39,7 @@ const Task_Assignment = (props) =>
     {
         const fetch_TAs = async () =>
         {
-            const result2 = await axiosJWT.post("http://localhost:9000/fetch_TAs_by_course_faculty",details, {headers:{'authorization':"Bearer "+userAccessToken}})
+            const result2 = await axiosJWT.get(`http://localhost:9000/fetch_TAs_by_course_faculty?Faculty_Email=${props.email}&Course_Code=${course.code}`, {headers:{'authorization':"Bearer "+userAccessToken}})
             set_TAs(result2.data)
         }
         fetch_TAs()

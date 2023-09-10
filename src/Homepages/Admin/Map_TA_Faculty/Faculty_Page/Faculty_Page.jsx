@@ -1,9 +1,7 @@
 import React, {useEffect,useState} from 'react'
 import Header from '../../../../Header/header.jsx'
 import './Faculty_Page.css'
-import { Link, useLocation } from 'react-router-dom'
-import axios from 'axios'
-import {Admin} from '../../../../Classes/Users.tsx'
+import { useLocation } from 'react-router-dom'
 import { useContext } from 'react';
 import {userContext} from '../../../../App.jsx'
 
@@ -37,13 +35,13 @@ const Faculty_Page = (props) =>
     {
         const fetch_TA_requests = async () =>
         {
-            const result = await axiosJWT.post("http://localhost:9000/fetch_TA_requests",faculty, {headers:{'authorization':"Bearer "+userAccessToken}})
+            const result = await axiosJWT.get(`http://localhost:9000/fetch_TA_requests?courses=${faculty.courses}`, {headers:{'authorization':"Bearer "+userAccessToken}})
             set_TA_requests(result)
         }
         fetch_TA_requests()
         const fetch_TAs = async () =>
         {
-            const result2 = await axiosJWT.post("http://localhost:9000/fetch_TAs",null, {headers:{'authorization':"Bearer "+userAccessToken}})
+            const result2 = await axiosJWT.get("http://localhost:9000/fetch_TAs", {headers:{'authorization':"Bearer "+userAccessToken}})
             set_TAs(result2)
         }
         fetch_TAs()

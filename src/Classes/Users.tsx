@@ -126,7 +126,7 @@ export class TA extends User
             index : Index
         }
         var temp;  
-        temp = await AxiosJWT().post("http://localhost:9000/Update_Task_Status", details, {headers:{'authorization':"Bearer "+UserAccessToken()}})
+        temp = await AxiosJWT().put("http://localhost:9000/Update_Task_Status", details, {headers:{'authorization':"Bearer "+UserAccessToken()}})
         this.message = temp.data.message
         return this.message
     }

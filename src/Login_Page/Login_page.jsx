@@ -87,11 +87,15 @@ function Login_page()
             const axiosLogin = axios.create();
             axiosLogin.post("http://localhost:9000/Login", user)
             .then(res => {
-                            setmessage(res.data.message)
-                            setUserEmail(res.data.userEmail)
+                            localStorage.setItem('userEmail',res.data.userEmail.toLowerCase())
+                            localStorage.setItem('userType',res.data.userType)
+                            localStorage.setItem('userAccessToken',res.data.accessToken);
+                            localStorage.setItem('userRefreshToken',res.data.refreshToken);
+                            setUserEmail(res.data.userEmail.toLowerCase())
                             setUserType(res.data.userType)
-                            setUserAccessToken(res.data.accessToken)
-                            setUserRefreshToken(res.data.refreshToken)
+                            setUserAccessToken(res.data.accessToken);
+                            setUserRefreshToken(res.data.refreshToken);
+                            setmessage(res.data.message)
                             navigate("/",{replace:true} )
                       })
         }

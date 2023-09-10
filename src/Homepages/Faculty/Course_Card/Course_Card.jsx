@@ -9,15 +9,13 @@ import {userContext} from '../../../App.jsx'
 const Course_Card = ({code}) => 
 {
     const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
-   
-    const course_code = {course_code:code}
     
     const [course,set_course]=useState("")
     useEffect(() => 
     {
         const fetch_course = async () =>
         {
-            const result = await axiosJWT.post("http://localhost:9000/fetch_course",course_code, {headers:{'authorization':"Bearer "+userAccessToken}})
+            const result = await axiosJWT.get(`http://localhost:9000/fetch_course?courseCode=${code}`,{headers:{'authorization':"Bearer "+userAccessToken}})
             set_course(result.data)  
         }
         fetch_course();
@@ -29,7 +27,7 @@ const Course_Card = ({code}) =>
         <div className='container'>
             <Link to="/Course_Page" state= {{course:course}}>
                 <div className='image'>
-                    <center><img src="https://drive.google.com/uc?export=view&id=1t5_0dABTBIsX1-79erOvLmCUcEYwffsI" height="240" max-width="250"/></center>
+                    <center><img src="/default_course_image.jpg" height="240" max-width="250"/></center>
                 </div>
                 <p><center>{course.name+" ("+code+")"}</center></p>
             </Link>

@@ -8,7 +8,6 @@ import {userContext} from '../../../../App.jsx'
 
 const Faculty_Card = ({faculty_id,name,image}) => 
 {
-    const id = {id:faculty_id}
     const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
    
     const [faculty,set_faculty]=useState("")
@@ -16,7 +15,7 @@ const Faculty_Card = ({faculty_id,name,image}) =>
     {
         const fetch_faculty = async () =>
         {
-            const result = await axiosJWT.post("http://localhost:9000/fetch_faculty",id, {headers:{'authorization':"Bearer "+userAccessToken}})
+            const result = await axiosJWT.get(`http://localhost:9000/fetch_faculty?id=${faculty_id}`,{headers:{'authorization':"Bearer "+userAccessToken}})
             set_faculty(result.data)  
         }
         fetch_faculty();

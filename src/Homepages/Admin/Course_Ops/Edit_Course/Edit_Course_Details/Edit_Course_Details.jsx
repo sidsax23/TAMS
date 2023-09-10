@@ -4,7 +4,7 @@ import Header from '../../../../../Header/header.jsx'
 import { useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import axios from 'axios'
-import { useContext } from 'react';
+import { useContext, useEffect} from 'react';
 import {userContext} from '../../../../../App.jsx'
 
 
@@ -12,7 +12,6 @@ function Edit_Course_Details(props)
 {
     const location=useLocation()
     const Course_details = location.state.Course
-    const Course_id = {id:Course_details._id}
 
     const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
    
@@ -20,12 +19,8 @@ function Edit_Course_Details(props)
     const [Course_code,set_Course_code] = useState(Course_details.code)
     const [Course_name,set_Course_name]=useState(Course_details.name)
 
-    const [dummy,set_dummy]=useState("")
-
-
     const [Message,setmessage] = useState("")
     const [show,setshow] = useState(false)
-    const [update,set_update]=useState(false)
     const pattern = new RegExp("[6,7,8,9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]") 
 
     const [Course,SetCourse] = useState(
@@ -33,24 +28,21 @@ function Edit_Course_Details(props)
         Course_code_new:"",
         Course_name_new:""
     })
-    const [axios_call_count,set_call_count]=useState(0)
 
-    if(axios_call_count==0||update==false)
+    const fetch_details = async () =>
     {
-      axiosJWT.post("http://localhost:9000/fetch_course",Course_id, {headers:{'authorization':"Bearer "+userAccessToken}}).then(
+      axiosJWT.get(`http://localhost:9000/fetch_course?courseId=${Course_details._id}`, {headers:{'authorization':"Bearer "+userAccessToken}}).then(
         res => {
-                  set_call_count(1)
-                  set_update(true)
-                  res.data.found ? Set_details(res) : set_dummy()
+                  set_Course_code(res.data.code);
+                  set_Course_name(res.data.name);
                })
-
-       function Set_details(res)
-       {
-         set_Course_code(res.data.code)
-         set_Course_name(res.data.name)
-       }
- 
     }
+
+    useEffect(() =>
+    {
+        fetch_details()
+
+    },[])
 
     
 
@@ -67,10 +59,8 @@ function Edit_Course_Details(props)
 
     const Save_Changes = () =>
     {
-        set_update(false)
         setshow(true)
-        const {Course_code,Course_code_new,Course_name_new} = Course
-        Course.Course_code=Course_details.code
+        const {Course_code_new,Course_name_new} = Course
         if(!Course_code_new&&!Course_name_new)
         {
             setmessage("Please enter new data")
@@ -85,8 +75,19 @@ function Edit_Course_Details(props)
         }
         else
         {
-            axiosJWT.put("http://localhost:9000/Update_Course_Details", Course, {headers:{'authorization':"Bearer "+userAccessToken}})
-            .then( res=> {setmessage(res.data.message)} )
+            const courseDetails = 
+            {
+              courseCode:Course_code,
+              Course_name_new:Course_name_new,
+              Course_code_new:Course_code_new
+            }
+            axiosJWT.put("http://localhost:9000/Update_Course_Details", courseDetails, {headers:{'authorization':"Bearer "+userAccessToken}})
+            .then( res=> {
+                            setmessage(res.data.message);
+                            Course.Course_code_new="";
+                            Course.Course_name_new="";
+                            fetch_details();
+                         })
         }
 
     }
@@ -102,7 +103,7 @@ function Edit_Course_Details(props)
                 <br/>
                 <div className='details'>                
                   <br/>
-                  <h3>Course Name &emsp;: &emsp;{Course_name} <br/><input name="Course_name_new" type="text" placeholder="Enter New Coruse Name" className='details_input' onChange={HandleChange} value={Course.Course_name_new}/></h3>
+                  <h3>Course Name &emsp;: &emsp;{Course_name} <br/><input name="Course_name_new" type="text" placeholder="Enter New Course Name" className='details_input' onChange={HandleChange} value={Course.Course_name_new}/></h3>
                   <br/>
                   <h3>Course Code &emsp;: &emsp;{Course_code} <br/><input name="Course_code_new" type="text" placeholder="Enter New Course Code" className='details_input' onChange={HandleChange} value={Course.Course_code_new}/></h3>
                   <br/>

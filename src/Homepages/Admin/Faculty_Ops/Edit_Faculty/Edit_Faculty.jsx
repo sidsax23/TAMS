@@ -54,8 +54,7 @@ const Edit_Faculty = (props) => {
   {
       for(var i=0;i<faculties.length;i++)
       {
-        const email = {email : faculties[i].Faculty_Email}
-        const faculty = await axiosJWT.post("http://localhost:9000/fetch_faculty_by_email",email, {headers:{'authorization':"Bearer "+userAccessToken}}) 
+        const faculty = await axiosJWT.get(`http://localhost:9000/fetch_faculty_by_email?email=${faculties[i].Faculty_Email}`, {headers:{'authorization':"Bearer "+userAccessToken}}) 
         faculties[i].faculty_name = faculty.data.name; 
       }
       set_updation_flag(0)
@@ -175,7 +174,7 @@ const Edit_Faculty = (props) => {
       
     }
     
-    axiosJWT.post("http://localhost:9000/Delete_Faculties", Faculty_Details, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
+    axiosJWT.delete(`http://localhost:9000/Delete_Faculties?emails=${Faculty_Details.emails}&TA_Emails=${Faculty_Details.TA_Emails}`, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
     {
 
       set_inner_popup1_message(res.data)
@@ -203,7 +202,7 @@ const Edit_Faculty = (props) => {
        }
      }
      
-     axiosJWT.post("http://localhost:9000/Reset_TA-Ship_Faculties", Faculty_Details, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
+     axiosJWT.put("http://localhost:9000/Reset_TA-Ship_Faculties", Faculty_Details, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
      {
        set_inner_popup2_message(res.data)
        set_popup2(false)

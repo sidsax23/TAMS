@@ -20,7 +20,6 @@ const Apply = (props) =>
         const [show,setshow] = useState(false)
         const [courses,set_courses] = useState()
         const [flag,set_flag]=useState(0);
-        const email = {email: props.user_email}
         
         const [fac,set_fac] = useState({name:""})
 
@@ -41,7 +40,7 @@ const Apply = (props) =>
             fetch_courses();
             const fetch_user = async () =>
             {
-                const result2 = await axiosJWT.post("http://localhost:9000/fetch_TA",email, {headers:{'authorization':"Bearer "+userAccessToken}})
+                const result2 = await axiosJWT.get(`http://localhost:9000/fetch_TA_by_email?email=${props.user_email}`, {headers:{'authorization':"Bearer "+userAccessToken}})
                 set_user(result2.data)
                 set_status(result2.data.Application_Status)
                 set_flag(1)
@@ -57,8 +56,7 @@ const Apply = (props) =>
         {
             const fetch_faculty = async () =>
             {
-                const fac_email = {email : user.Faculty_Email}
-                const result3 = await axiosJWT.post("http://localhost:9000/fetch_faculty_by_email",fac_email, {headers:{'authorization':"Bearer "+userAccessToken}})
+                const result3 = await axiosJWT.get(`http://localhost:9000/fetch_faculty_by_email?email=${user.Faculty_Email}`, {headers:{'authorization':"Bearer "+userAccessToken}})
                 set_fac(result3.data)
                 set_flag(0);
             }
@@ -112,7 +110,7 @@ const Apply = (props) =>
                 const response = await axiosJWT.post("http://localhost:9000/Set_choices", details, {headers:{'authorization':"Bearer "+userAccessToken}})
                 setmessage(response.data.message)  
 
-                const result2 = await axiosJWT.post("http://localhost:9000/fetch_TA",email, {headers:{'authorization':"Bearer "+userAccessToken}})
+                const result2 = await axiosJWT.get(`http://localhost:9000/fetch_TA_by_email?email=${props.user_email}`, {headers:{'authorization':"Bearer "+userAccessToken}})
                 set_user(result2.data)
 
             }

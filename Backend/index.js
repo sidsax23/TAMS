@@ -62,32 +62,6 @@ mongoose.connection.once("open", ()=>
   });
 })
 .on("error", (err)=>{console.warn(err)})
-//AdminModel.find(async (err,course) => 
-//{
-//    if(err)
-//    {
-//        const name ="Sidharth Saxena"
-//        const email = "h20220282@pilani.bits-pilani.ac.in"
-//        const new_pass = "pass"
-//        const salt = await bcrypt.genSalt(10);
-//        const securePassword = await bcrypt.hash(new_pass, salt);
-//        const type = "Admin"
-//        const phone_num = 9611988905
-//        const dept = "CSIS"
-//        const image_url = ""
-//        const Admin  = new AdminModel(
-//            {
-//                name,
-//                type,
-//                email,
-//                securePassword,
-//                phone_num,
-//                dept,
-//                image_url
-//            })
-//            Admin.save()
-//    }
-//})
 
 
 //JWT Key and verification
@@ -100,7 +74,7 @@ here it will be available as long as the TAMS backend is running by storing it i
 let refreshTokens=[]
 function generateJWTAccessToken(userEmail,userType)
 {
-    //Access token will expire in 15 minutes. Refresh token may be used to regenerate it post that.
+    //Access token will expire in 5 minutes. Refresh token may be used to regenerate it post that.
     return jwt.sign({email:userEmail, type:userType}, accessTokenSecretKey, {expiresIn:"5m"})
 }
 function generateJWTRefreshToken(userEmail,userType)
@@ -482,11 +456,11 @@ app.get("/fetch_courses", verify, (req,res) =>
 })
 
 //RETREIVING COURSE BACKEND
-app.post("/fetch_course",verify, (req,res) => 
+app.get("/fetch_course",verify, (req,res) => 
 {
     if(req.user.type=="Admin"||req.user.type=="Faculty") 
     {
-        const query = req.body.course_code ? { code:req.body.course_code} : {_id:req.body._id}
+        const query = req.query.courseCode ? { code:req.query.courseCode} : {_id:req.query.courseId}
         CourseModel.findOne(query,(err,course) => 
         {
             if(err)
@@ -531,11 +505,11 @@ app.get("/fetch_faculties",verify, (req,res) =>
 })
 
 //RETREIVING FACULTY'S COURSES
-app.post("/fetch_faculty_courses",verify, (req,res) => 
+app.get("/fetch_faculty_courses",verify, (req,res) => 
 {
     if(req.user.type=="Faculty") 
     {
-        const email = req.body.facultyEmail;
+        const email = req.query.facultyEmail;
         FacultyModel.findOne({email:email},(err,Faculty) => 
         {
             if(err)
@@ -557,11 +531,11 @@ app.post("/fetch_faculty_courses",verify, (req,res) =>
 
 
 //RETREIVING FACULTY
-app.post("/fetch_faculty",verify, (req,res) => 
+app.get("/fetch_faculty",verify, (req,res) => 
 {
-    const id = req.body.id
     if(req.user) 
     {
+        const id = req.query.id;
         FacultyModel.findOne({_id:id},(err,Faculty) => 
         {
             if(err)
@@ -582,11 +556,11 @@ app.post("/fetch_faculty",verify, (req,res) =>
 })
  
 //RETREIVING FACULTY BY EMAIL
-app.post("/fetch_faculty_by_email",verify, (req,res) => 
+app.get("/fetch_faculty_by_email",verify, (req,res) => 
 {
-    const email = req.body.email
     if(req.user) 
     {
+        const email = req.query.email;
         FacultyModel.findOne({email:email},(err,Faculty) => 
         {
             if(err)
@@ -726,11 +700,11 @@ app.post("/Set_choices",verify, (req,res) =>
 
 
 //RETREIVING TA BACKEND
-app.post("/fetch_TA", verify, (req,res) => 
+app.get("/fetch_TA_by_email", verify, (req,res) => 
 {
     if(req.user) 
     {
-        TAModel.findOne({email:req.body.email},(err,TA) => 
+        TAModel.findOne({email:req.query.email},(err,TA) => 
         {
             if(err)
             {
@@ -750,7 +724,7 @@ app.post("/fetch_TA", verify, (req,res) =>
 
 
 //RETREIVING TAs
-app.post("/fetch_TAs", verify, (req,res) => 
+app.get("/fetch_TAs", verify, (req,res) => 
 {
     if(req.user.type=="Admin"||req.user.type=="Faculty") 
     {
@@ -802,11 +776,11 @@ app.get("/fetch_students", verify, (req,res) =>
 
 
 //RETREIVING TA REQUESTS BACKEND
-app.post("/fetch_TA_requests", verify, (req,res) => 
+app.get("/fetch_TA_requests", verify, (req,res) => 
 {
     if(req.user.type=="Admin") 
     {
-        const courses = req.body.courses
+        const courses = req.query.courses.split(",");
         TAModel.find({$and : [{Faculty_Email:""},{Application_Status:"Applied"},{$or : [{course1 : {$in : courses}},{course2 : {$in : courses}},{course3 : {$in : courses}}]}]},(err,TA_requests) => 
         {
             if(err)
@@ -829,12 +803,12 @@ app.post("/fetch_TA_requests", verify, (req,res) =>
 
 
 //RETREIVING TAs BY EMAIL ARRAY BACKEND
-app.post("/fetch_TAs_email_array", verify, (req,res) => 
+app.get("/fetch_TAs_email_array", verify, (req,res) => 
 {
     if(req.user.type=="Admin"||req.user.type=="Faculty") 
     {
 
-        const emails = req.body
+        const emails = req.query.emails.split(",");
         TAModel.find({email : {$in : emails}},(err,TAs) => 
         {
             if(err)
@@ -857,11 +831,11 @@ app.post("/fetch_TAs_email_array", verify, (req,res) =>
 
 
 //RETREIVING TAs BY COURSE AND FACULTY
-app.post("/fetch_TAs_by_course_faculty", verify, (req,res) => 
+app.get("/fetch_TAs_by_course_faculty", verify, (req,res) => 
 {
     if(req.user.type=="Faculty") 
     {
-        TAModel.find({$and : [{Application_Status:"Accepted"}, {Faculty_Email : req.body.Faculty_Email}, {Final_Course_Code:req.body.Course_Code}]},(err,TAs) => 
+        TAModel.find({$and : [{Application_Status:"Accepted"}, {Faculty_Email : req.query.Faculty_Email}, {Final_Course_Code:req.query.Course_Code}]},(err,TAs) => 
         {
             if(err)
             {
@@ -1037,7 +1011,7 @@ app.put("/Update_Faculty_Profile", verify, (req,res) =>
                         }
 
                         var query2;
-                        if(req.body.faculty_pass_new!="")
+                        if(req.user.type=="Faculty"&&req.body.faculty_pass_new!="")
                         {
                             const salt = await bcrypt.genSalt(10);
                             const securePassword = await bcrypt.hash(req.body.faculty_pass_new, salt);
@@ -1154,12 +1128,12 @@ app.put("/Update_Admin_Profile", verify, (req,res) =>
 
 
 //FETCH ALL TASKS
-app.post("/fetch_tasks", verify, (req,res) => 
+app.get("/fetch_tasks", verify, (req,res) => 
 {
     if(req.user.type=="Faculty") 
     {
-        const fac_email=req.body.fac_email
-        const course_code = req.body.course_code
+        const fac_email=req.query.fac_email
+        const course_code = req.query.course_code
 
         TaskModel.find({$and : [{Faculty_Email:fac_email},{Course_Code:course_code}]}, (err,tasks) =>
         {
@@ -1237,11 +1211,11 @@ app.post("/Assign_Task", verify, (req,res) =>
 })                       
 
 //Delete Tasks
-app.post("/Delete_Tasks", verify, (req,res) => 
+app.delete("/Delete_Tasks", verify, (req,res) => 
 {
     if(req.user.type=="Faculty") 
     {
-        const Task_IDs = req.body.ids
+        const Task_IDs = req.query.ids.split(",");
         
         //Deleting tasks
         TaskModel.deleteMany({_id : {$in : Task_IDs}}, (err) => 
@@ -1264,7 +1238,7 @@ app.post("/Delete_Tasks", verify, (req,res) =>
 })
 
 //Reset Tasks
-app.post("/Reset_Tasks", verify, (req,res) => 
+app.put("/Reset_Tasks", verify, (req,res) => 
 {
     if(req.user.type=="Faculty") 
     {
@@ -1418,12 +1392,12 @@ app.post("/Remove_ta_from_task", verify, (req,res) =>
 })
 
 //FETCH INCOMPLETE TASKS
-app.post("/fetch_incomplete_tasks", verify, (req,res) => 
+app.get("/fetch_incomplete_tasks", verify, (req,res) => 
 {
     if(req.user.type=="Faculty"||req.user.type=="TA") 
     {
-        const fac_email=req.body.fac_email
-        const course_code = req.body.course_code
+        const fac_email=req.query.fac_email
+        const course_code = req.query.course_code
 
         TaskModel.find({$and : [{Faculty_Email:fac_email},{Course_Code:course_code},{$or : [{Status : {$in : "Not Started"}},{Status : {$in : 'In Progress' }}]}]}, (err,tasks) =>
         {
@@ -1448,11 +1422,11 @@ app.post("/fetch_incomplete_tasks", verify, (req,res) =>
 
 
 //FETCH INCOMPLETE TASKS (TA)
-app.post("/fetch_incomplete_tasks_TA", verify, (req,res) => 
+app.get("/fetch_incomplete_tasks_TA", verify, (req,res) => 
 {
     if(req.user) 
     {
-        const email=req.body.email
+        const email=req.query.email
         var final_tasks = []
 
         TaskModel.find({$and : [{email:email},{$or : [{Status : {$in : "Not Started"}},{Status : {$in : 'In Progress' }}]}]}, (err,tasks) =>
@@ -1481,11 +1455,11 @@ app.post("/fetch_incomplete_tasks_TA", verify, (req,res) =>
 })
 
 //FETCH INCOMPLETE TASK BY ID
-app.post("/fetch_incomplete_task_id", verify, (req,res) => 
+app.get("/fetch_incomplete_task_id", verify, (req,res) => 
 {
     if(req.user) 
     {
-        const id=req.body.id
+        const id=req.query.id
         TaskModel.findOne({_id:id}, (err,task) =>
         {
             if(task)
@@ -1508,7 +1482,7 @@ app.post("/fetch_incomplete_task_id", verify, (req,res) =>
 })
 
 //UPDATE TASK STATUS
-app.post("/Update_Task_Status", verify, (req,res) =>
+app.put("/Update_Task_Status", verify, (req,res) =>
 {
     if(req.user.type=="TA") 
     {
@@ -1550,12 +1524,12 @@ app.post("/Update_Task_Status", verify, (req,res) =>
 
 
 //FETCH COMPLETE TASKS
-app.post("/fetch_completed_tasks", verify, (req,res) => 
+app.get("/fetch_completed_tasks", verify, (req,res) => 
 {
     if(req.user) 
     {
-        const fac_email=req.body.fac_email
-        const course_code = req.body.course_code
+        const fac_email=req.query.fac_email
+        const course_code = req.query.course_code
 
         TaskModel.find({$and : [{Faculty_Email:fac_email},{Course_Code:course_code},{Status : {$nin : ["Not Started","In Progress"]}}]}, (err,tasks) =>
         {
@@ -1629,11 +1603,11 @@ app.post("/Edit_Task_Faculty", verify, (req,res) =>
 
 
 //FETCH COMPLETE TASK BY ID
-app.post("/fetch_task_id", verify, (req,res) => 
+app.get("/fetch_task_id", verify, (req,res) => 
 {
     if(req.user.type=="Faculty"||req.user.type=="Admin") 
     {
-        const id=req.body.id
+        const id=req.query.id
         TaskModel.findOne({_id:id}, (err,task) =>
         {
             if(task)
@@ -1654,11 +1628,11 @@ app.post("/fetch_task_id", verify, (req,res) =>
 })
 
 //FETCH COMPLETED TASKS (TA)
-app.post("/fetch_completed_tasks_TA", verify, (req,res) => 
+app.get("/fetch_completed_tasks_TA", verify, (req,res) => 
 {
-    if(req.user.email==req.body.email&&req.user.type=="TA") 
+    if(req.user.email==req.query.email&&req.user.type=="TA") 
     {
-        const email=req.body.email
+        const email=req.query.email
         var final_tasks = []
 
         TaskModel.find( (err,tasks) =>
@@ -1686,12 +1660,12 @@ app.post("/fetch_completed_tasks_TA", verify, (req,res) =>
 
 
 //DELETION (STUDENTS)
-app.post("/Delete_TAs", verify, (req,res) => 
+app.delete("/Delete_TAs", verify, (req,res) => 
 {
     if(req.user.type=="Admin") 
     {
-        const TA_Emails = req.body.emails
-        const Faculty_Emails = [...new Set(req.body.Faculty_Emails)] 
+        const TA_Emails = req.query.emails.split(",")
+        const Faculty_Emails = [...new Set(req.query.Faculty_Emails.split(","))] 
         
         for(var i=0;i<Faculty_Emails.length;i++)
         {
@@ -1755,7 +1729,7 @@ app.post("/Delete_TAs", verify, (req,res) =>
         }
 
         //Deleting TAs
-        TAModel.deleteMany({_id : {$in : req.body.ids}}, (err) => 
+        TAModel.deleteMany({_id : {$in : req.query.ids}}, (err) => 
         {
           if(err) 
           {
@@ -1936,7 +1910,7 @@ app.put("/Update_TA_Profile", verify, (req,res) =>
 
 
 //RESET TA-SHIP (For TAs)
-app.post("/Reset_TA-Ship_TAs", verify, (req,res) => 
+app.put("/Reset_TA-Ship_TAs", verify, (req,res) => 
 {
     if(req.user.type=="Admin") 
     {
@@ -2016,13 +1990,13 @@ app.post("/Reset_TA-Ship_TAs", verify, (req,res) =>
 
 
 //DELETION (FACULTIES)
-app.post("/Delete_Faculties", verify, (req,res) => 
+app.delete("/Delete_Faculties", verify, (req,res) => 
 {
 
     if(req.user.type=="Admin") 
     {
-        const Faculty_Emails = req.body.emails
-        const TA_Emails = [...new Set(req.body.TA_Emails)] 
+        const Faculty_Emails = req.query.emails
+        const TA_Emails = [...new Set(req.query.TA_Emails)] 
 
         //Updating TA Statuses
         const query = {$set : {Application_Status: "Yet to Apply", Faculty_Email:"",Final_Course_Code:"",course1:"",course2:"",course3:""}}
@@ -2066,7 +2040,7 @@ app.post("/Delete_Faculties", verify, (req,res) =>
 
 
 //RESET TA-SHIP (For Faculties)
-app.post("/Reset_TA-Ship_Faculties", verify, (req,res) => 
+app.put("/Reset_TA-Ship_Faculties", verify, (req,res) => 
 {
 
     if(req.user.type=="Admin") 
@@ -2118,14 +2092,13 @@ app.post("/Reset_TA-Ship_Faculties", verify, (req,res) =>
 
 
 //DELETION (COURSES)
-app.post("/Delete_Courses", verify, (req,res) => 
+app.delete("/Delete_Courses", verify, (req,res) => 
 {
     if(req.user.type=="Admin") 
     {
-        const Courses_ids = req.body.ids
-        const Course_Codes = req.body.codes 
-        const TA_list = []
-        
+        const Courses_ids = req.query.ids;
+        const Course_Codes = req.query.codes;
+        const TA_list = [];
         
         //Updating Faculty Statuses (TA_emails and courses)
         TAModel.find({Final_Course_Code : {$in : Course_Codes}}, (err,TAs) =>
@@ -2148,7 +2121,7 @@ app.post("/Delete_Courses", verify, (req,res) =>
                             var updated_courses = faculties[i].courses
                             updated_courses = updated_courses.filter(course => !Course_Codes.includes(course));
                             const query = { $set : {TA_Emails:updated_TA_Emails, courses: updated_courses}}
-                            FacultyModel.updateOne({id : faculties[i]._id }, query, (err,faculty) => 
+                            FacultyModel.updateOne({email : faculties[i].email }, query, (err,faculty) => 
                             {
                                 if(err)
                                 {
@@ -2173,6 +2146,64 @@ app.post("/Delete_Courses", verify, (req,res) =>
               res.send("Error Occurred! Please try again later.");
           }
         });
+
+        //Removing Course Codes from TA choices
+        const queryCourse1 = {$set : {course1:""}}
+        TAModel.updateMany({course1 : {$in : Course_Codes}},queryCourse1, (err) => 
+        {
+          if(err) 
+          {
+            res.send("Error Occurred! Please try again later.");
+          }
+        });
+        const queryCourse2 = {$set : {course2:""}}
+        TAModel.updateMany({course2 : {$in : Course_Codes}},queryCourse2, (err) => 
+        {
+          if(err) 
+          {
+            res.send("Error Occurred! Please try again later.");
+          }
+        });
+        const queryCourse3 = {$set : {course3:""}}
+        TAModel.updateMany({course3 : {$in : Course_Codes}},queryCourse3, (err) => 
+        {
+          if(err) 
+          {
+            res.send("Error Occurred! Please try again later.");
+          }
+        });
+        //This may cause some TA(s) to have no course choices. So application status must be updated.
+        const resetQuery = {$set : {Application_Status: "Yet to Apply", Faculty_Email:"",Final_Course_Code:""}}
+        TAModel.updateMany({$and : [{course1 : ""},{course2 : ""},{course3 : ""}]},resetQuery, (err) => 
+        {
+          if(err) 
+          {
+              res.send("Error Occurred! Please try again later.");
+          }
+        });
+
+
+        //Removing Course Codes from Faculty Courses
+        FacultyModel.find({courses : {$in : Course_Codes } }, (err, faculties) =>
+        {
+            if(faculties)
+            {
+                for(var i=0;i<faculties.length;i++)
+                {
+                    var updated_courses = faculties[i].courses;
+                    updated_courses = updated_courses.filter(course => !Course_Codes.includes(course));
+                    const faculty_email=faculties[i].email
+                    FacultyModel.updateOne({email : faculty_email}, { $set : {courses: updated_courses}}, (err,faculty) => 
+                    {
+                        if(err)
+                        {
+                            res.send("Error Occurred! Please try again later.");
+                        }
+                    })
+                }
+            
+            }
+        })
 
     
 
@@ -2211,7 +2242,7 @@ app.post("/Delete_Courses", verify, (req,res) =>
 
 
 //RESET TA-SHIP (For Courses)
-app.post("/Reset_TA-Ship_Courses", verify, (req,res) => 
+app.put("/Reset_TA-Ship_Courses", verify, (req,res) => 
 {
     if(req.user.type=="Admin") 
     {
@@ -2290,8 +2321,8 @@ app.put("/Update_Course_Details", verify, (req,res) =>
 {
     if(req.user.type=="Admin") 
     {
-        const code = req.body.Course_code
-        var name
+        const code = req.body.courseCode;
+        var name;
         CourseModel.findOne({code:code}, (err, course) =>
         {
             if(course)
@@ -2387,10 +2418,14 @@ app.put("/Update_Course_Details", verify, (req,res) =>
                     }
                 })
             }
+            else
+            {
+                console.log("Error:",err);
+            }
         })
     }
     else
     {
-        res.status(403).send({message:"You are not allowed to reset TA-Ships for courses!"})
+        res.status(403).send({message:"Error Occurred! Please try again later."})
     }
 })  

@@ -11,10 +11,7 @@ const Faculty_homepage = (props) =>
     const [courses,setCourses] = useState([]);
     async function fetch_courses()
     {
-        const facultyEmail= {
-          facultyEmail: userEmail
-        }
-        const result= await axiosJWT.post("http://localhost:9000/fetch_faculty_courses",facultyEmail, {headers:{'authorization':"Bearer "+userAccessToken}})
+        const result= await axiosJWT.get(`http://localhost:9000/fetch_faculty_courses?facultyEmail=${userEmail}`, {headers:{'authorization':"Bearer "+userAccessToken}})
         setCourses(result.data.courses);
     }
     useEffect(()=>{

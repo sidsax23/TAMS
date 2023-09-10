@@ -2,8 +2,6 @@ import React, {useEffect,useState} from 'react'
 import Header from '../../../Header/header.jsx'
 import './Course_Page.css'
 import { Link, useLocation } from 'react-router-dom'
-import axios from 'axios'
-import {Faculty} from '../../../Classes/Users.tsx'
 import {BsListTask} from 'react-icons/bs'
 import {FaTasks} from 'react-icons/fa'
 import { useContext } from 'react';
@@ -17,19 +15,12 @@ const Course_Page = (props) =>
     const location=useLocation()
     const course = location.state.course
     const [TAs,set_TAs] = useState([""])
-    const [details,set_details]=useState(
-        {
-            Faculty_Email : props.email,
-            Course_Code : course.code
-        }
-
-    )
 
     useEffect(() => 
     {
         const fetch_TAs = async () =>
         {
-            const result2 = await axiosJWT.post("http://localhost:9000/fetch_TAs_by_course_faculty",details, {headers:{'authorization':"Bearer "+userAccessToken}})
+            const result2 = await axiosJWT.get(`http://localhost:9000/fetch_TAs_by_course_faculty?Faculty_Email=${props.email}&Course_Code=${course.code}`, {headers:{'authorization':"Bearer "+userAccessToken}})
             set_TAs(result2.data)
         }
         fetch_TAs()

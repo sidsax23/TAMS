@@ -15,39 +15,29 @@ const View_Tasks = (props) =>
    
     const location=useLocation()
     const course = location.state.course
-    const task_details = {
-        fac_email:props.email,
-        course_code:course.code
-    }
     const [TAs,set_TAs] = useState([""])
     const [incomplete_tasks,set_incomplete_tasks] = useState("")
     const [completed_tasks,set_completed_tasks] = useState("")
-
-    const [details,set_details]=useState(
-        {
-            Faculty_Email : props.email,
-            Course_Code : course.code
-        })
 
     useEffect(() => 
     {
         const fetch_TAs = async () =>
         {
-            const result2 = await axiosJWT.post("http://localhost:9000/fetch_TAs_by_course_faculty",details, {headers:{'authorization':"Bearer "+userAccessToken}})
+            const result2 = await axiosJWT.get(`http://localhost:9000/fetch_TAs_by_course_faculty?Faculty_Email=${props.email}&Course_Code=${course.code}`, {headers:{'authorization':"Bearer "+userAccessToken}})
             set_TAs(result2.data)
         }
         fetch_TAs()
 
         const fetch_incomplete_tasks = async () =>
         {
-            const data= await axiosJWT.post("http://localhost:9000/fetch_incomplete_tasks",task_details, {headers:{'authorization':"Bearer "+userAccessToken}})
+            const data= await axiosJWT.get(`http://localhost:9000/fetch_incomplete_tasks?fac_email=${props.email}&course_code=${course.code}`, {headers:{'authorization':"Bearer "+userAccessToken}})
             set_incomplete_tasks(data)
         }
         fetch_incomplete_tasks();
 
         const fetch_completed_tasks = async () =>
         {
-            const data= await axiosJWT.post("http://localhost:9000/fetch_completed_tasks",task_details, {headers:{'authorization':"Bearer "+userAccessToken}})
+            const data= await axiosJWT.get(`http://localhost:9000/fetch_completed_tasks?fac_email=${props.email}&course_code=${course.code}`, {headers:{'authorization':"Bearer "+userAccessToken}})
             set_completed_tasks(data)
         }
         fetch_completed_tasks();

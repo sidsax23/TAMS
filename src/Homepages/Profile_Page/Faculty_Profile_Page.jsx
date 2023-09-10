@@ -48,7 +48,7 @@ function Faculty_Profile(props)
                   set_call_count(1)
                   set_update(true)
                   res.data.found ? Set_details(res) : setdummy()
-                  axiosJWT.post("http://localhost:9000/fetch_TAs_email_array",res.data.TA_Emails, {headers:{'authorization':"Bearer "+userAccessToken}}).then(response=>{set_details_2(response,res.data.TA_Emails)})
+                  axiosJWT.get(`http://localhost:9000/fetch_TAs_email_array?emails=${res.data.TA_Emails}`, {headers:{'authorization':"Bearer "+userAccessToken}}).then(response=>{set_details_2(response,res.data.TA_Emails)})
                })
 
        

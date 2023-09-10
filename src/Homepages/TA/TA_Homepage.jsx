@@ -16,21 +16,20 @@ const TA_homepage = (props) =>
 
     const [incomplete_tasks,set_incomplete_tasks] = useState("")
     const [completed_tasks,set_completed_tasks] = useState("")
-    const email= {email:props.email}
 
     useEffect(() => 
     {
 
         const fetch_incomplete_tasks = async () =>
         {
-            const data= await axiosJWT.post("http://localhost:9000/fetch_incomplete_tasks_TA",email, {headers:{'authorization':"Bearer "+userAccessToken}})
+            const data= await axiosJWT.get(`http://localhost:9000/fetch_incomplete_tasks_TA?email=${props.email}`, {headers:{'authorization':"Bearer "+userAccessToken}})
             set_incomplete_tasks(data)
         }
         fetch_incomplete_tasks();
 
         const fetch_completed_tasks = async () =>
         {
-            const data= await axiosJWT.post("http://localhost:9000/fetch_completed_tasks_TA",email, {headers:{'authorization':"Bearer "+userAccessToken}})
+            const data= await axiosJWT.get(`http://localhost:9000/fetch_completed_tasks_TA?email=${props.email}`, {headers:{'authorization':"Bearer "+userAccessToken}})
             set_completed_tasks(data)
         }
         fetch_completed_tasks();

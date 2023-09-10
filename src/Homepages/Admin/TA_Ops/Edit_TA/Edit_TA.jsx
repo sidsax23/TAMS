@@ -53,8 +53,7 @@ const Edit_TA = (props) => {
   {
       for(var i=0;i<students.length;i++)
       {
-        const email = {email : students[i].Faculty_Email}
-        const faculty = await axiosJWT.post("http://localhost:9000/fetch_faculty_by_email",email, {headers:{'authorization':"Bearer "+userAccessToken}}) 
+        const faculty = await axiosJWT.get(`http://localhost:9000/fetch_faculty_by_email?email=${students[i].Faculty_Email}`, {headers:{'authorization':"Bearer "+userAccessToken}}) 
         students[i].faculty_name = faculty.data.name; 
       }
       set_updation_flag(0)
@@ -153,7 +152,7 @@ const Edit_TA = (props) => {
       TA_Details.emails.push(selected_data[i].email)
     }
     
-    axiosJWT.post("http://localhost:9000/Delete_TAs", TA_Details, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
+    axiosJWT.delete(`http://localhost:9000/Delete_TAs?ids=${TA_Details.ids}&Faculty_Emails=${TA_Details.Faculty_Emails}&emails=${TA_Details.emails}`, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
     {
 
       set_inner_popup1_message(res.data)
@@ -178,7 +177,7 @@ const Edit_TA = (props) => {
        TA_Details.emails.push(selected_data[i].email)
      }
      
-     axiosJWT.post("http://localhost:9000/Reset_TA-Ship_TAs", TA_Details, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
+     axiosJWT.put("http://localhost:9000/Reset_TA-Ship_TAs", TA_Details, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
      {
        set_inner_popup2_message(res.data)
        set_popup2(false)

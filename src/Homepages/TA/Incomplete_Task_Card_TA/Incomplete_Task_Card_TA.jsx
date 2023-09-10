@@ -15,7 +15,6 @@ const Incomplete_Tasks_Card_TA = (props) => {
     const [Message,set_message]=useState("")
     const [incomplete_task,set_incomplete_task]=useState(props.param)
     const [index,set_index] = useState()
-    const id = {id:incomplete_task._id}
     const [status,set_status]=useState("") 
     const [status_old,set_status_old] = useState("")
     const [update,set_update]=useState(true)
@@ -70,7 +69,7 @@ const Incomplete_Tasks_Card_TA = (props) => {
                 id:incomplete_task._id,
                 index:index
             }
-            const response = await axiosJWT.post("http://localhost:9000/Update_Task_Status", details, {headers:{'authorization':"Bearer "+userAccessToken}})
+            const response = await axiosJWT.put("http://localhost:9000/Update_Task_Status", details, {headers:{'authorization':"Bearer "+userAccessToken}})
             set_message(response.data.message)   
         }
 
@@ -80,7 +79,7 @@ const Incomplete_Tasks_Card_TA = (props) => {
     {
         const fetch_incomplete_tasks = async () =>
         {
-            const result= await axiosJWT.post("http://localhost:9000/fetch_incomplete_task_id",id, {headers:{'authorization':"Bearer "+userAccessToken}})
+            const result= await axiosJWT.get(`http://localhost:9000/fetch_incomplete_task_id?id=${incomplete_task._id}`, {headers:{'authorization':"Bearer "+userAccessToken}})
             set_incomplete_task(result.data)
             Setter(result.data)
             set_status_old(status)

@@ -60,7 +60,7 @@ function Edit_Faculty_Details(props)
                   set_update(true)
                   res.data.found ? Set_details(res) : set_dummy()
                })
-      axiosJWT.post("http://localhost:9000/fetch_TAs_email_array",Faculty_details.TA_Emails, {headers:{'authorization':"Bearer "+userAccessToken}}).then(response=>{set_details_2(response,Faculty_details.TA_Emails)})
+      axiosJWT.get(`http://localhost:9000/fetch_TAs_email_array?emails=${Faculty_details.TA_Emails}`, {headers:{'authorization':"Bearer "+userAccessToken}}).then(response=>{set_details_2(response,Faculty_details.TA_Emails)})
       axiosJWT.get("http://localhost:9000/fetch_courses", {headers:{"authorization":"Bearer "+userAccessToken}}).then(res=>{set_all_courses(res.data)}) 
        function Set_details(res)
        {

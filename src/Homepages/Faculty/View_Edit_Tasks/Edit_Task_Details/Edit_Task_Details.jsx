@@ -19,11 +19,6 @@ const Edit_Task_Details = (props) =>
     const [TAs,set_TAs] = useState([""])
     const [Course_TAs,set_Course_TAs] = useState([""])
     const [RT, set_RT] = useState(0)
-    const [details,set_details]=useState(
-        {
-            Faculty_Email : props.email,
-            Course_Code : location.state.course.code
-        })
     const days = [ "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" ];
     const [update,set_update]=useState(true)
     const [show,set_show]=useState("")
@@ -31,7 +26,6 @@ const Edit_Task_Details = (props) =>
     const [show2,set_show2]=useState("")
     const [Message2,set_message2]=useState("")
     const [comments,set_comments] = useState([])
-    const id = {id:task._id}
     var arr=[];
     var arr2=[];
     var arr3 = [];
@@ -58,14 +52,14 @@ const Edit_Task_Details = (props) =>
     {
         const fetch_TAs = async () =>
         {
-            const result = await axiosJWT.post("http://localhost:9000/fetch_TAs_email_array",task.TA_Emails, {headers:{'authorization':"Bearer "+userAccessToken}})
+            const result = await axiosJWT.get(`http://localhost:9000/fetch_TAs_email_array?emails=${task.TA_Emails}`, {headers:{'authorization':"Bearer "+userAccessToken}})
             set_TAs(result.data)
         }
         fetch_TAs()
 
         const fetch_course_TAs = async () =>
         {
-            const result2 = await axiosJWT.post("http://localhost:9000/fetch_TAs_by_course_faculty",details, {headers:{'authorization':"Bearer "+userAccessToken}})
+            const result2 = await axiosJWT.get(`http://localhost:9000/fetch_TAs_by_course_faculty?Faculty_Email=${props.email}&Course_Code=${location.state.course.code}`, {headers:{'authorization':"Bearer "+userAccessToken}})
             set_Course_TAs(result2.data)
         }
         fetch_course_TAs()
@@ -165,7 +159,7 @@ const Edit_Task_Details = (props) =>
     {
         const fetch_task = async () =>
         {
-            const result= await axiosJWT.post("http://localhost:9000/fetch_task_id",id, {headers:{'authorization':"Bearer "+userAccessToken}})
+            const result= await axiosJWT.get(`http://localhost:9000/fetch_task_id?id=${task._id}`, {headers:{'authorization':"Bearer "+userAccessToken}})
             set_task(result.data)
             set_update(true)
         }

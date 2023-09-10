@@ -27,14 +27,16 @@ import Edit_Task_Details from './Homepages/Faculty/View_Edit_Tasks/Edit_Task_Det
 import {Routes, BrowserRouter as Router, Route} from 'react-router-dom' /*Routes = Switch-case from C++*/
 import axios from 'axios'
 import jwt_decode from 'jwt-decode'
+import {logout} from './login_functions.jsx'
+import { useEffect } from 'react'
 
 
 function App() 
 {
-  const [userEmail,setUserEmail] = useState(null)
-  const [userType,setUserType] = useState(null)
-  const [userAccessToken,setUserAccessToken] = useState(null)
-  const [userRefreshToken,setUserRefreshToken] = useState(null)
+  const [userEmail,setUserEmail] = useState(localStorage.getItem('userEmail')?localStorage.getItem('userEmail'):null)
+  const [userType,setUserType] = useState(localStorage.getItem('userType')?localStorage.getItem('userType'):null)
+  const [userAccessToken,setUserAccessToken] = useState(localStorage.getItem('userAccessToken')?localStorage.getItem('userAccessToken'):null)
+  const [userRefreshToken,setUserRefreshToken] = useState(localStorage.getItem('userRefreshToken')?localStorage.getItem('userRefreshToken'):null)
 
   //Refreshing the access token once it expires
   const refreshToken = async() =>
@@ -82,10 +84,17 @@ function App()
   (error) =>
   {
     return Promise.reject(error)
-  }
-  )
+  })
 
+  //Logging out the user across all tabs if the user logs out from any open tab.
+  window.addEventListener("storage", () => {
+    const email = window.localStorage.getItem("userEmail");
+    if(email==null)
+    {
+      logout(setUserEmail,setUserType,userAccessToken,userRefreshToken,axiosJWT);
+    }
 
+  });
 
   
   return (
