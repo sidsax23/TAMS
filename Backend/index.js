@@ -26,7 +26,42 @@ mongoose.connect("mongodb://localhost:27017/TAMS_DB",
                     function(error) {if(error){console.log(error)}else{console.log("DB Connected")}}, /* Just to see if the DB got connected successfully or not*/
                 )
 
+//Checking if the admin db has at least one admin. Adding one, if not.
+mongoose.connection.once("open", ()=>
+{
+  mongoose.connection.db.listCollections().toArray(async function (err, collectionNames) {
+    if (err) {
+      console.log(err);
+      return;
+    }
+    let obj = collectionNames.find(data => data.name === 'admins');
+    if (obj === undefined || obj.length === 0) 
+    {
+        const name ="Sidharth Saxena"
+        const email = "h20220282@pilani.bits-pilani.ac.in"
+        const new_pass = "pass"
+        const salt = await bcrypt.genSalt(10);
+        const pass = await bcrypt.hash(new_pass, salt);
+        const type = "Admin"
+        const phone_num = 9611988905
+        const dept = "CSIS"
+        const image_url = ""
 
+        const Admin  = new AdminModel(
+                        {
+                            name,
+                            type,
+                            email,
+                            pass,
+                            phone_num,
+                            dept,
+                            image_url
+                        })
+        Admin.save()
+    }
+  });
+})
+.on("error", (err)=>{console.warn(err)})
 //AdminModel.find(async (err,course) => 
 //{
 //    if(err)
