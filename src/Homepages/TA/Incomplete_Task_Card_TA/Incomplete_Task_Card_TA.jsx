@@ -1,25 +1,35 @@
 import React,{useState,useEffect, useTransition} from 'react'
 import './Incomplete_Task_Card_TA.css'
-import axios from 'axios'
+import Popup from 'reactjs-popup'
+import { CircularProgress } from '@mui/material'
 import { format, parseISO } from 'date-fns'
-import {TA} from '../../../Classes/Users.tsx'
 import { useContext } from 'react';
 import {userContext} from '../../../App.jsx'
+import { resolvePath } from 'react-router-dom'
+import axios from 'axios';
 
 const Incomplete_Tasks_Card_TA = (props) => {
 
-    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+    const [userEmail,userType] = useContext(userContext);
    
     const days = [ "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" ];
-    const [show,set_show]=useState("")
-    const [Message,set_message]=useState("")
     const [incomplete_task,set_incomplete_task]=useState(props.param)
     const [index,set_index] = useState()
     const [status,set_status]=useState("") 
     const [status_old,set_status_old] = useState("")
-    const [update,set_update]=useState(true)
     var today = new Date()
     var deadline = new Date(incomplete_task.Deadline)
+
+    /* The JWT refresh token update is not reflected in the '.then' block of the previous request where the refresh token was updated, 
+    so this variable stores if update is needed and calls the fetch_details function when needed */
+    const [update,setUpdate] = useState(0)
+
+    //Loading Screen
+    const [loadingPopup,setLoadingPopup] = useState(false);
+    //Popup
+    const [popup,setPopup] = useState(false);
+    const [success,setSuccess] = useState(0);
+    const [popupMessage,setPopupMessage] = useState(null);
 
     
     function Setter(incomplete_task)
@@ -35,58 +45,68 @@ const Incomplete_Tasks_Card_TA = (props) => {
         }
     }
 
+    const fetch_incomplete_tasks = async () =>
+    {
+        await axios.get(`http://localhost:9000/fetch_incomplete_task_id?id=${incomplete_task._id}`, { withCredentials: true }).then(res=>
+        {
+            set_incomplete_task(res.data);
+            Setter(res.data);
+            setUpdate(0);
+        })
+        
+    }
+
     useEffect(() =>
     {   
-        Setter(incomplete_task)
-        
+        Setter(incomplete_task);
+        fetch_incomplete_tasks();
     },[])
+
+    useEffect(() =>
+    {   
+        if(update==1)
+        { 
+            fetch_incomplete_tasks();
+        }
+    },[update])
 
     const HandleChange = e =>
     {
-        set_show(false)
-        set_message("")
         set_status(e.target.value)
-
     }
  
     const Save_Changes = async() =>
     {
-        set_show(true)
         if(status==status_old)
         {
-            set_message("No Change in Task Status")
+            setPopupMessage("No Change in Task Status");
+            setPopup(true);
         }
         else if(status=="")
         {
-            set_message("Please select a valid task status")
+            setPopupMessage("Please select a valid task status");
+            setPopup(true);
         }
         else
-        {  
-            
-            set_update(false)
+        {    
+            setLoadingPopup(true);
             const details = {
                 Status:status,
                 id:incomplete_task._id,
                 index:index
             }
-            const response = await axiosJWT.put("http://localhost:9000/Update_Task_Status", details, {headers:{'authorization':"Bearer "+userAccessToken}})
-            set_message(response.data.message)   
+            await axios.put("http://localhost:9000/Update_Task_Status", details, { withCredentials: true }).then(res=>
+            {   
+                if(status=="Completed")
+                    set_status_old("Completed")
+                setLoadingPopup(false);
+                setPopupMessage(res.data.message);
+                setSuccess(res.data.success);
+                setPopup(true);
+                setUpdate(1);
+            })
         }
 
-    }
-
-    if(update==false)
-    {
-        const fetch_incomplete_tasks = async () =>
-        {
-            const result= await axiosJWT.get(`http://localhost:9000/fetch_incomplete_task_id?id=${incomplete_task._id}`, {headers:{'authorization':"Bearer "+userAccessToken}})
-            set_incomplete_task(result.data)
-            Setter(result.data)
-            set_status_old(status)
-            set_update(true)
-        }
-        fetch_incomplete_tasks();
-        
     }
     
     return (
@@ -112,9 +132,27 @@ const Incomplete_Tasks_Card_TA = (props) => {
                   <p>&emsp;&emsp;Note : You cannot edit task status once the task has been completed.</p>
                   <br/>
                   <center>
-                  <div className="ErrorMsg">{show && Message!=="Task Status Updated Successfully" ? Message : ""}</div>
-                  <div className="SuccessMsg">{show && Message=="Task Status Updated Successfully" ? Message : ""}</div>
                   <div className={status_old=="Completed"? 'ncbtn' : 'btn'} onClick={status_old=="Completed"? null : Save_Changes}>UPDATE</div>
+                  {/* LOADING SCREEN */}
+                    <Popup open={loadingPopup} hideBackdrop closeOnDocumentClick={false} onClose={()=>{setLoadingPopup(false)}}>
+                         <center>
+                           <p style={{color:"#003C71", fontSize:"130%", margin:"3%"}}><center>PLEASE WAIT...</center></p>
+                           <br/>
+                           <CircularProgress/>
+                           <br/>
+                           <br/>
+                         </center>
+                    </Popup> 
+                    <Popup open = {popup} closeOnDocumentClick  onClose={()=>{setPopup(false);setSuccess(0);}}>
+                    <center> 
+                        <br/>
+                        <center><div className={success==1 ? 'SuccessMsg' : 'ErrorMsg'}>{popupMessage}</div></center>
+                        <br/>
+                        <div className='export_btn' onClick={()=>{setPopup(false);setSuccess(0)}}>Ok</div>
+                        <br/>
+                        <br/>
+                      </center>
+                    </Popup>
                   </center>
             </span>
         </div>

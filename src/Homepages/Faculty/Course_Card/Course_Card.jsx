@@ -8,14 +8,14 @@ import {userContext} from '../../../App.jsx'
 
 const Course_Card = ({code}) => 
 {
-    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+    const [userEmail,userType] = useContext(userContext);
     
     const [course,set_course]=useState("")
     useEffect(() => 
     {
         const fetch_course = async () =>
         {
-            const result = await axiosJWT.get(`http://localhost:9000/fetch_course?courseCode=${code}`,{headers:{'authorization':"Bearer "+userAccessToken}})
+            const result = await axios.get(`http://localhost:9000/fetch_course?courseCode=${code}`, { withCredentials: true })
             set_course(result.data)  
         }
         fetch_course();

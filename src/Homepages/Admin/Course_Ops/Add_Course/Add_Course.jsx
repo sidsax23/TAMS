@@ -1,20 +1,18 @@
 import React,{useState} from 'react'
 import Header from '../../../../Header/header.jsx'
-import {Admin} from '../../../../Classes/Users.tsx'
 import Papa from 'papaparse'
 import {Link} from 'react-router-dom'
 import { useContext } from 'react'
 import {userContext} from '../../../../App.jsx'
+import Popup from 'reactjs-popup' 
+import { CircularProgress } from '@mui/material';
+import axios from 'axios';
 
 const Add_Course = (props) => 
 {
-    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
-    
-        const [Message,setmessage] = useState("")
-        const [show,setshow] = useState(false)
-        const [Message2,setmessage2] = useState("")
+        const [userEmail,userType] = useContext(userContext);
         const [duplicate_course_code_flag,set_duplicate_course_code_flag] = useState(false)
-        const [no_file_flag,set_no_file_flag] = useState(false)
+        const [no_file_flag,set_no_file_flag] = useState(true)
         const [course_count,set_course_count] = useState(0)
 
         //Regex for checking phone number validity
@@ -25,11 +23,17 @@ const Add_Course = (props) =>
             code:"",
         })
 
+        //Loading Screen
+        const [loadingPopup,setLoadingPopup] = useState(false)
+
+        //Popup
+        const [popup,setPopup] = useState(false);
+        const [success,setSuccess] = useState(0);
+        const [popupMessage,setPopupMessage] = useState(null);
+
         const HandleChange  = e =>  /*When someone types, its an 'event', denoted and saved in 'e' here. e.target will return where and what the change was*/
         {    
-            setshow(false)
-            setmessage("")
-            const {name,value} = e.target
+            const {name,value} = e.target;
             Set_Course_temp({
                 ...Course_temp, /* Stores the value entered by the user in the respective state variable while the rest remain as their default values ("" in this case)*/
                 [name]:value /* Depending on the name of the inputbar, its value is stored in the respective state variable*/
@@ -39,20 +43,30 @@ const Add_Course = (props) =>
 
         const Save_Changes = async() =>
         {
-            setshow(true)
             if(!Course_temp.name)
             {
-                setmessage("Please enter the course's name")
+                setPopupMessage("Please enter the course's name");
+                setPopup(true);
             } 
             else if(!Course_temp.code)
             {
-                setmessage("Please enter the course's code")
+                setPopupMessage("Please enter the course's code");
+                setPopup(true);
             }
             else
             {
-                const course={course_name: Course_temp.name,course_code: Course_temp.code}
-                const response = await axiosJWT.post("http://localhost:9000/Add_Course", course, {headers:{'authorization':"Bearer "+userAccessToken}})
-                setmessage(response.data.message)                 
+                setLoadingPopup(true);
+                const course={course_name: Course_temp.name,course_code: Course_temp.code};
+                await axios.post("http://localhost:9000/Add_Course", course, { withCredentials: true }).then(res=>{
+                    
+                    setLoadingPopup(false);
+                    setSuccess(res.data.success)
+                    setPopupMessage(res.data.message);
+                    setPopup(true);
+                    Course_temp.name="";
+                    Course_temp.code="";
+                })
+                                 
             }
         }
 
@@ -60,7 +74,6 @@ const Add_Course = (props) =>
 
         const ChangeHandler = (e) =>
         {
-            setshow(true)
             // Passing file data (e.target.files[0]) to parse using Papa.parse
             set_duplicate_course_code_flag(false)
             set_no_file_flag(false)
@@ -95,13 +108,15 @@ const Add_Course = (props) =>
                             if(unique_course_codes.size!=course_codes.length)
                             {
                                 set_duplicate_course_code_flag(true)
-                                setmessage2("Duplicate course codes found. Please try again.")
+                                setPopupMessage("Duplicate course codes found. Please try again.");
+                                setPopup(true);                                
                             }
                             set_bulk_data(row_values)
                         }
                         else
                         {
-                            setmessage2("Incorrect format found in the uploaded file. Please try again!")
+                            setPopupMessage("Incorrect format found in the uploaded file. Please try again!")
+                            setPopup(true);
                         }     
                     },
                 });
@@ -116,23 +131,34 @@ const Add_Course = (props) =>
 
         const Bulk_Upload = async() => 
         {
-            setshow(true)
+            setLoadingPopup(true);
             if(no_file_flag==false&&duplicate_course_code_flag==false)
             {
+                const course = {
+                    Names:[],
+                    Codes:[]
+                }
                 for(var i=0;i<course_count;i++)
                 {
-                    const course={course_name: bulk_data[i][0],course_code: bulk_data[i][1]}
-                    const response = await axiosJWT.post("http://localhost:9000/Add_Course", course, {headers:{'authorization':"Bearer "+userAccessToken}})
-                    if(response.data.message!="Course Successfully Added")
-                    {
-                        console.log("Course (with Course Code ",bulk_data[i][1],") could not be uploaded. Error : ",response)
-                    }
-                    setmessage2("Course(s) Successfully Added")
+                    course.Names.push(bulk_data[i][0]);
+                    course.Codes.push(bulk_data[i][1]);
                 }      
+                await axios.post("http://localhost:9000/Add_Course_in_Bulk", course, { withCredentials: true }).then(res=>
+                {
+                    for(var i=0;i<res.data.errs.length;i++)
+                        console.log("Course (with Course code ",res.data.codesErr[i],") could not be uploaded. Error : ",res.data.errs[i]);
+                    setLoadingPopup(false);
+                    setSuccess(1);
+                    setPopupMessage("Course(s) Uploaded!");
+                    setPopup(true);
+                })
+                    
             }
             else
             {
-                setmessage2("Please upload an appropriate file")
+                setLoadingPopup(false);
+                setPopupMessage("Please upload an appropriate file.");
+                setPopup(true);
             }
         }
 
@@ -149,8 +175,6 @@ const Add_Course = (props) =>
 		            Upload File (CSV only) : &emsp;<input type="file" accept="*.csv" onChange={ChangeHandler} />
                     <br/>
                     <br/>
-                    <div className="ErrorMsg">{show && Message2!=="Course(s) Successfully Added" ? Message2 : ""}</div>
-                    <div className="SuccessMsg">{show && Message2=="Course(s) Successfully Added" ? Message2 : ""}</div>
                     <div className='btn' onClick={Bulk_Upload}>Upload</div>
                     <br/>
                     <br/>
@@ -163,13 +187,32 @@ const Add_Course = (props) =>
                         <h3>Course Code &emsp;: <br/><input type="text" name="code" placeholder="Enter Course Code" className='details_input' onChange={HandleChange} value={Course_temp.code}/></h3>
                         <br/>
                     </div>
-                    <div className="ErrorMsg">{show && Message!=="Course Successfully Added" ? Message : ""}</div>
-                    <div className="SuccessMsg">{show && Message=="Course Successfully Added" ? Message : ""}</div>
                     <div className='btn' onClick={Save_Changes}>ADD</div>
                     <br/>
                     <br/>
                     </center>
-              </div>
+                </div>
+                {/* LOADING SCREEN */}
+                <Popup open={loadingPopup} hideBackdrop closeOnDocumentClick={false} onClose={()=>{setLoadingPopup(false)}}>
+                     <center>
+                       <p style={{color:"#003C71", fontSize:"130%", margin:"3%"}}><center>PLEASE WAIT...</center></p>
+                       <br/>
+                       <CircularProgress/>
+                       <br/>
+                       <br/>
+                     </center>
+                </Popup> 
+
+                <Popup open = {popup} closeOnDocumentClick  onClose={()=>{setPopup(false);setSuccess(0);}}>
+                <center> 
+                    <br/>
+                    <center><div className={success==1 ? 'SuccessMsg' : 'ErrorMsg'}>{popupMessage}</div></center>
+                    <br/>
+                    <div className='export_btn' onClick={()=>{setPopup(false);setSuccess(0);}}>Ok</div>
+                    <br/>
+                    <br/>
+                  </center>
+                </Popup>
             </div>
         )
         

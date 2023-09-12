@@ -24,74 +24,50 @@ import Edit_Faculty_Details from './Homepages/Admin/Faculty_Ops/Edit_Faculty/Edi
 import Edit_Course from './Homepages/Admin/Course_Ops/Edit_Course/Edit_Course.jsx'
 import Edit_Course_Details from './Homepages/Admin/Course_Ops/Edit_Course/Edit_Course_Details/Edit_Course_Details.jsx'
 import Edit_Task_Details from './Homepages/Faculty/View_Edit_Tasks/Edit_Task_Details/Edit_Task_Details.jsx'
-import {Routes, BrowserRouter as Router, Route} from 'react-router-dom' /*Routes = Switch-case from C++*/
+import {Routes, BrowserRouter as Router, Route, Navigate} from 'react-router-dom' /*Routes = Switch-case from C++*/
 import axios from 'axios'
-import jwt_decode from 'jwt-decode'
-import {logout} from './login_functions.jsx'
-import { useEffect } from 'react'
+import secureLocalStorage from 'react-secure-storage'
 
 
 function App() 
 {
-  const [userEmail,setUserEmail] = useState(localStorage.getItem('userEmail')?localStorage.getItem('userEmail'):null)
-  const [userType,setUserType] = useState(localStorage.getItem('userType')?localStorage.getItem('userType'):null)
-  const [userAccessToken,setUserAccessToken] = useState(localStorage.getItem('userAccessToken')?localStorage.getItem('userAccessToken'):null)
-  const [userRefreshToken,setUserRefreshToken] = useState(localStorage.getItem('userRefreshToken')?localStorage.getItem('userRefreshToken'):null)
-
-  //Refreshing the access token once it expires
-  const refreshToken = async() =>
+  const [userEmail,setUserEmail] = useState(isLoggedIn()?secureLocalStorage.getItem('userEmail'):null)
+  const [userType,setUserType] = useState(isLoggedIn()?secureLocalStorage.getItem('userType'):null)
+ 
+  //Checking if the user still has the access token
+  function isLoggedIn() 
   {
-    var accessToken=null;
-    try
+    var flag=0;
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) 
     {
-      const token ={
-        token:userRefreshToken
-      }
-      await axios.post("http://localhost:9000/Refresh",token).then(async(res)=>{
-        setUserAccessToken(res.data.accessToken);
-        setUserRefreshToken(res.data.refreshToken);
-        accessToken=res.data.accessToken;
-      })
-      return accessToken;
+      const cookie = cookies[i].trim();
+      // Check if the cookie string is "loggedIn=1"
+      if (cookie === 'loggedIn=1') 
+        flag=1;
     }
-    catch(err)
+    if(flag==1)
     {
-      console.log(err);
+      return true;
+    }
+    else
+    {
+      secureLocalStorage.removeItem('userEmail');
+      secureLocalStorage.removeItem('userType');
+      return false;
     }
   }
 
-  //To Refresh the token automatically, we can use axios interceptors
-  /*
-  Axios interceptors are functions that are called before a request is sent and after a response is received. 
-  The official doc mentions that you can “intercept” requests and responses before they are handled.
-  */
-  const axiosJWT =axios.create()
-  axiosJWT.interceptors.request.use( async (config) => 
-  {
-      let currentDate = new Date();
-      //Decoding the token to see its expiry
-      const decodedToken = jwt_decode(userAccessToken);
-      //checking if it is expired
-      if (decodedToken.exp * 1000 < currentDate.getTime()) {
-        
-        const data=await refreshToken()
-        //Add new token to header of the axios call that was intercepted with the expired token
-        config.headers["authorization"] = "Bearer "+data;
-      }
-      return config;
-  },
-  //Reject everything if there is an error
-  (error) =>
-  {
-    return Promise.reject(error)
-  })
 
   //Logging out the user across all tabs if the user logs out from any open tab.
-  window.addEventListener("storage", () => {
-    const email = window.localStorage.getItem("userEmail");
-    if(email==null)
+  window.addEventListener("storage", async () => {
+    if(!isLoggedIn())
     {
-      logout(setUserEmail,setUserType,userAccessToken,userRefreshToken,axiosJWT);
+        //LOGOUT PROCESS
+        setUserEmail(null);
+        setUserType(null);
+        secureLocalStorage.removeItem('userEmail');
+        secureLocalStorage.removeItem('userType');
     }
 
   });
@@ -99,17 +75,17 @@ function App()
   
   return (
     //Context will be avaiable to all components inside this and since all components are called here, it may be considered global
-    <userContext.Provider value={[userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT]}> 
+    <userContext.Provider value={[userEmail,userType,setUserEmail,setUserType]}> 
     <Router>
       <Routes>
 		    <Route exact path="/" element =
           {
-            userEmail ? (userType=="TA" ? <TA_homepage email={userEmail}/>  : userType=="Faculty" ? <Faculty_homepage/> : userType=="Admin" ? <Admin_homepage/> : <Login_page/> ) : <Login_page/>
+            userEmail ? (userType=="TA" ? <TA_homepage email={userEmail}/>  : userType=="Faculty" ? <Faculty_homepage/> : userType=="Admin" ? <Admin_homepage/> : <Navigate to="/Login"/> ) : <Navigate to="/Login"/>
           }
         />
         <Route exact path="/Login" element =
           {
-            <Login_page />
+            <Login_page setUserEmail={setUserEmail} setUserType={setUserType}/>
           }
         /> 
         <Route exact path="/Recover_pass" element =
@@ -119,102 +95,102 @@ function App()
         />   
         <Route exact path="/Add_TA" element =
           {
-            userEmail && userType=="Admin" ? <Add_TAs/> : <Login_page/>
+            userEmail && userType=="Admin" ? <Add_TAs/> : <Navigate to="/Login"/>
           }
         />
         <Route exact path="/Add_Faculty" element =
           {
-            userEmail && userType=="Admin"? <Add_Faculty/> : <Login_page/>
+            userEmail && userType=="Admin"? <Add_Faculty/> : <Navigate to="/Login"/>
           }
         />
         <Route exact path="/Add_Course" element =
           {
-            userEmail && userType=="Admin" ? <Add_Course/> : <Login_page/>
+            userEmail && userType=="Admin" ? <Add_Course/> : <Navigate to="/Login"/>
           }
         />
         <Route exact path="/Apply" element =
           {
-            userEmail && userType=="TA" ? <Apply  user_email={userEmail} /> : <Login_page/>
+            userEmail && userType=="TA" ? <Apply  user_email={userEmail} /> : <Navigate to="/Login"/>
           }
         />
         <Route exact path="/Map" element =
           {
-            userEmail && userType=="Admin" ? <Mapping/> : <Login_page/>
+            userEmail && userType=="Admin" ? <Mapping/> : <Navigate to="/Login"/>
           }
         />
         <Route exact path="/Faculty_Page" element =
           {
-            userEmail && userType=="Admin" ? <Faculty_Page/> : <Login_page/>
+            userEmail && userType=="Admin" ? <Faculty_Page/> : <Navigate to="/Login"/>
           }
         />
         <Route exact path="/faculty_profile" element =
         {
-          userEmail && userType=="Faculty" ? <Faculty_Profile  email={userEmail} /> : <Login_page/>
+          userEmail && userType=="Faculty" ? <Faculty_Profile  email={userEmail} /> : <Navigate to="/Login"/>
         }
         />
         <Route exact path="/Course_Page" element =
         {
-          userEmail && userType=="Faculty" ? <Course_Page  email={userEmail} /> : <Login_page/>
+          userEmail && userType=="Faculty" ? <Course_Page  email={userEmail} /> : <Navigate to="/Login"/>
         }
         />
         <Route exact path="/Assign_Task_Page" element =
         {
-          userEmail && userType=="Faculty" ? <Task_Assignment  email={userEmail} /> : <Login_page/>
+          userEmail && userType=="Faculty" ? <Task_Assignment  email={userEmail} /> : <Navigate to="/Login"/>
         }
         />
         <Route exact path="/View_Edit_Tasks_Page" element =
         {
-          userEmail && userType=="Faculty" ? <View_Edit_Tasks  email={userEmail} /> : <Login_page/>
+          userEmail && userType=="Faculty" ? <View_Edit_Tasks  email={userEmail} /> : <Navigate to="/Login"/>
         }
         />
         <Route exact path="/Ops" element =
         {
-          userEmail && userType=="Admin" ? <Ops  email={userEmail} /> : <Login_page/>
+          userEmail && userType=="Admin" ? <Ops  email={userEmail} /> : <Navigate to="/Login"/>
         }
         />
         <Route exact path="/admin_profile" element =
         {
-          userEmail && userType=="Admin" ? <Admin_Profile  email={userEmail} /> : <Login_page/>
+          userEmail && userType=="Admin" ? <Admin_Profile  email={userEmail} /> : <Navigate to="/Login"/>
         }
         />
         <Route exact path="/Edit_TA" element =
         {
-          userEmail && userType=="Admin" ? <Edit_TA  email={userEmail} /> : <Login_page/>
+          userEmail && userType=="Admin" ? <Edit_TA  email={userEmail} /> : <Navigate to="/Login"/>
         }
         />
         <Route exact path="/Edit_TA_Details" element =
         {
-          userEmail && userType=="Admin" ? <Edit_TA_Details/> : <Login_page/>
+          userEmail && userType=="Admin" ? <Edit_TA_Details/> : <Navigate to="/Login"/>
         }
         />
         <Route exact path="/ta_profile" element =
         {
-          userEmail && userType=="TA" ? <TA_Profile_Page  email={userEmail} /> : <Login_page/>
+          userEmail && userType=="TA" ? <TA_Profile_Page  email={userEmail} /> : <Navigate to="/Login"/>
         }
         />
         <Route path="/Edit_Faculty" element =
         {
-          userEmail && userType=="Admin" ? <Edit_Faculty  email={userEmail} /> : <Login_page/>
+          userEmail && userType=="Admin" ? <Edit_Faculty  email={userEmail} /> : <Navigate to="/Login"/>
         }
         />
         <Route exact path="/Edit_Faculty_Details" element =
         {
-          userEmail && userType=="Admin" ? <Edit_Faculty_Details/> : <Login_page/>
+          userEmail && userType=="Admin" ? <Edit_Faculty_Details/> : <Navigate to="/Login"/>
         }
         />
          <Route path="/Edit_Course" element =
         {
-          userEmail && userType=="Admin" ? <Edit_Course  email={userEmail} /> : <Login_page/>
+          userEmail && userType=="Admin" ? <Edit_Course  email={userEmail} /> : <Navigate to="/Login"/>
         }
         />
         <Route exact path="/Edit_Course_Details" element =
         {
-          userEmail && userType=="Admin" ? <Edit_Course_Details/> : <Login_page/>
+          userEmail && userType=="Admin" ? <Edit_Course_Details/> : <Navigate to="/Login"/>
         }
         />
         <Route exact path="/Edit_Task_Details" element =
         {
-          userEmail && userType=="Faculty" ? <Edit_Task_Details  email={userEmail} /> : <Login_page/>
+          userEmail && userType=="Faculty" ? <Edit_Task_Details  email={userEmail} /> : <Navigate to="/Login"/>
         }
         />
         

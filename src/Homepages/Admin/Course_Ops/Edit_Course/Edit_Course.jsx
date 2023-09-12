@@ -4,52 +4,58 @@ import './Edit_Course.css'
 import DataTable from 'react-data-table-component'
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import axios from 'axios'
+import { CircularProgress } from '@mui/material'
 import { CSVLink } from 'react-csv'
 import Popup from 'reactjs-popup'
 import 'reactjs-popup/dist/index.css' 
 import { useContext } from 'react';
 import {userContext} from '../../../../App.jsx'
+import axios from 'axios';
 
+const Edit_Course = (props) => 
+{
 
-const Edit_Course = (props) => {
+  const [userEmail,userType] = useContext(userContext);
 
-  
-  const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+  const [courses,set_courses] = useState([]);
+  const [selected_data,set_selected_data] = useState([]);
+  const [filtered_courses,set_filtered_courses] = useState([]);
+  const [search,set_search] = useState("");
+  const [popup1,set_popup1] = useState(false);
+  const [popup2,set_popup2] = useState(false);
+  const [inner_popup1,set_inner_popup1] = useState(false);
+  const [inner_popup1_message,set_inner_popup1_message] = useState("");
+  const [inner_popup2,set_inner_popup2] = useState(false);
+  const [inner_popup2_message,set_inner_popup2_message] = useState("");
 
+  const [cKey,setCKey] = useState(0);
 
-  const [courses,set_courses] = useState([])
-  const [selected_data,set_selected_data] = useState([])
-  const [filtered_courses,set_filtered_courses] = useState([])
-  const [search,set_search] = useState("")
-  const [popup1,set_popup1] = useState(false)
-  const [popup2,set_popup2] = useState(false)
-  const [inner_popup1,set_inner_popup1] = useState(false)
-  const [inner_popup1_message,set_inner_popup1_message] = useState("")
-  const [inner_popup2,set_inner_popup2] = useState(false)
-  const [inner_popup2_message,set_inner_popup2_message] = useState("")
+  /* The JWT refresh token update is not reflected in the '.then' block of the previous request where the refresh token was updated, 
+  so this variable stores if update is needed and calls the fetch_details function when needed */
+  const [update,setUpdate] = useState(0)
+
+  //Loading Screen
+  const [loadingPopup,setLoadingPopup] = useState(false);
 
   const get_courses = async() =>
   {
-    try 
-    {
-      const response = await axiosJWT.get("http://localhost:9000/fetch_courses", {headers:{'authorization':"Bearer "+userAccessToken}})
-      set_filtered_courses(response.data)
-      set_courses(response.data)
-    } 
-    catch (error) 
-    {
-      console.log(error)      
-    }
-
+    const response = await axios.get("http://localhost:9000/fetch_courses", { withCredentials: true });
+    set_filtered_courses(response.data.courses);
+    set_courses(response.data.courses);
+    setUpdate(0);  
   }
 
-  
 
   useEffect(() => 
   {
     get_courses();   
   }, [])
+
+  useEffect(() =>
+  {
+    if(update==1)
+    get_courses();
+  },[update])
 
   useEffect(() => 
   {
@@ -87,6 +93,7 @@ const Edit_Course = (props) => {
   //DELETION
   const delete_records = () =>
   {
+    setLoadingPopup(true)
     const Course_Details = {
       ids:[],
       codes:[]
@@ -98,19 +105,21 @@ const Edit_Course = (props) => {
       Course_Details.codes.push(selected_data[i].code)
     }
     
-    axiosJWT.delete(`http://localhost:9000/Delete_Courses?ids=${Course_Details.ids}&codes=${Course_Details.codes}`, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
+    axios.delete(`http://localhost:9000/Delete_Courses?ids=${Course_Details.ids}&codes=${Course_Details.codes}`, { withCredentials: true }).then( (res) =>
     {
-
-      set_inner_popup1_message(res.data)
-      set_popup1(false)
-      set_inner_popup1(true)
-      get_courses()
+      setLoadingPopup(false);
+      set_inner_popup1_message(res.data);
+      set_popup1(false);
+      set_inner_popup1(true);
+      setCKey(cKey+1);
+      setUpdate(1);
     })
   }
 
    //Reset TA-Ship
    const reset_records = () =>
    {
+    setLoadingPopup(true);
      const Course_Details = {
        codes:[]
      }
@@ -119,12 +128,14 @@ const Edit_Course = (props) => {
        Course_Details.codes.push(selected_data[i].code)
      }
      
-     axiosJWT.put("http://localhost:9000/Reset_TA-Ship_Courses", Course_Details, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
+     axios.put("http://localhost:9000/Reset_TA-Ship_Courses", Course_Details, { withCredentials: true }).then( (res) =>
      {
-       set_inner_popup2_message(res.data)
-       set_popup2(false)
-       set_inner_popup2(true)
-       get_courses()
+       setLoadingPopup(false);
+       set_inner_popup2_message(res.data);
+       set_popup2(false);
+       set_inner_popup2(true);
+       setCKey(cKey+1);
+       setUpdate(1);
      })
    }
 
@@ -157,6 +168,7 @@ const Edit_Course = (props) => {
           <h1>COURSE LIST</h1>
           <br/>
           <DataTable 
+            key={cKey} //This is changed after every reset or deletion to ensure that the table is reset
             columns={columns} 
             data={filtered_courses} 
             fixedHeader 
@@ -216,6 +228,16 @@ const Edit_Course = (props) => {
               <br/>
             </center>
           </Popup>
+          {/* LOADING SCREEN */}
+          <Popup open={loadingPopup} hideBackdrop closeOnDocumentClick={false} onClose={()=>{setLoadingPopup(false)}}>
+           <center>
+             <p style={{color:"#003C71", fontSize:"130%", margin:"3%"}}><center>PLEASE WAIT...</center></p>
+             <br/>
+             <CircularProgress/>
+             <br/>
+             <br/>
+           </center>
+          </Popup> 
           </center>
           <br/>
       </div>

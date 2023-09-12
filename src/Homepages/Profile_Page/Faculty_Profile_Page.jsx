@@ -1,33 +1,28 @@
 import React from 'react'
 import './profile.css'
 import Header from '../../Header/header.jsx'
-import { useState } from 'react'
-import axios from 'axios'
+import { useState, useEffect } from 'react'
+import Popup from 'reactjs-popup'
+import { CircularProgress } from '@mui/material'
 import { useContext } from 'react';
-import {userContext} from '../../App.jsx'
+import {userContext} from '../../App.jsx';
+import axios from 'axios';
 
 
 function Faculty_Profile(props) 
 {
-    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+    const [userEmail,userType] = useContext(userContext);
    
     const [faculty_name,set_faculty_name]=useState("")
-    const [dummy,setdummy]=useState("")
     const [faculty_dept,set_dept]=useState("")
     const [faculty_phone_num,set_phone_num]=useState("")
     const [faculty_TAs_Req,set_TAs_Req]=useState("")
     const [courses,set_courses] = useState([])
     const [TA_Emails,set_TA_Emails] = useState([])
     const [image_url,set_image_url] = useState("")
-    const [TAs,set_TAs] = useState()
     const [TA_Names,set_TA_Names]=useState(["","","","",""])
     var arr=[]
     const [pass_copy,set_pass_copy] =useState("")
-
-
-    const [Message,setmessage] = useState("")
-    const [show,setshow] = useState(false)
-    const [update,set_update]=useState(false)
     const pattern = new RegExp("[6,7,8,9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]") 
 
     const [faculty,Setfaculty] = useState(
@@ -39,30 +34,37 @@ function Faculty_Profile(props)
         faculty_image_url_new:"",
         faculty_pass_new:""
     })
-    const [axios_call_count,set_call_count]=useState(0)
 
-    if(axios_call_count==0||update==false)
+     /* The JWT refresh token update is not reflected in the '.then' block of the previous request where the refresh token was updated, 
+    so this variable stores if update is needed and calls the fetch_details function when needed */
+    const [update,setUpdate] = useState(0)
+
+    //Loading Screen
+    const [loadingPopup,setLoadingPopup] = useState(false);
+    //Popup
+    const [popup,setPopup] = useState(false);
+    const [success,setSuccess] = useState(0);
+    const [popupMessage,setPopupMessage] = useState(null);
+
+    const fetch_details = async() =>
     {
-      axiosJWT.post("http://localhost:9000/Faculty_Profile",props, {headers:{'authorization':"Bearer "+userAccessToken}}).then(
-        res => {
-                  set_call_count(1)
-                  set_update(true)
-                  res.data.found ? Set_details(res) : setdummy()
-                  axiosJWT.get(`http://localhost:9000/fetch_TAs_email_array?emails=${res.data.TA_Emails}`, {headers:{'authorization':"Bearer "+userAccessToken}}).then(response=>{set_details_2(response,res.data.TA_Emails)})
-               })
-
+        axios.post("http://localhost:9000/Faculty_Profile",props, { withCredentials: true }).then(async(res) => 
+        {
+            set_faculty_name(res.data.name)
+            set_TAs_Req(res.data.TAs_Req)
+            set_image_url(res.data.image_url)
+            set_phone_num(res.data.phone_num)
+            set_dept(res.data.dept)
+            set_courses(res.data.courses)
+            set_TA_Emails(res.data.TA_Emails)
+    
+            await axios.get(`http://localhost:9000/fetch_TAs_email_array?emails=${res.data.TA_Emails}`, { withCredentials: true }).then(response=>
+            {
+                set_details_2(response,res.data.TA_Emails)
+                setUpdate(0);
+            })
+        })
        
-      function Set_details(res)
-      {
-        set_faculty_name(res.data.name)
-        set_TAs_Req(res.data.TAs_Req)
-        set_image_url(res.data.image_url)
-        set_phone_num(res.data.phone_num)
-        set_dept(res.data.dept)
-        set_courses(res.data.courses)
-        set_TA_Emails(res.data.TA_Emails)
-        
-      }
       function set_details_2(res,emails)
         {
             for(var i=0;i<emails.filter(email => email!="").length;i++)
@@ -80,8 +82,18 @@ function Faculty_Profile(props)
                 return [e, TA_Names[i]];
             })
         }
-
     }
+
+    useEffect(() =>
+    {
+        fetch_details()
+    },[])
+
+    useEffect(() =>
+    {
+      if(update==1)
+        fetch_details();
+    },[update])
 
     
 
@@ -99,8 +111,6 @@ function Faculty_Profile(props)
 
     const HandleChange  = e =>  /*When someone types, its an 'event', denoted and saved in 'e' here. e.target will return where and what the change was*/
     {    
-        setshow(false)
-        setmessage("")
         const {name,value} = e.target
         if(name=="pass_copy")
         {
@@ -117,42 +127,61 @@ function Faculty_Profile(props)
 
     const Save_Changes = () =>
     {
-        set_update(false)
-        setshow(true)
         const {email,faculty_name_new,faculty_phone_num_new,faculty_TAs_Req_new,faculty_image_url_new,faculty_pass_new} = faculty
         faculty.email=props.email
         if(!faculty_name_new&&!faculty_phone_num_new&&!faculty_TAs_Req_new&&!faculty_image_url_new&&!faculty_pass_new)
         {
-            setmessage("Please enter new data")
+            setPopupMessage("Please enter new data");
+            setPopup(true);
         }
         else if(faculty_TAs_Req_new==faculty_TAs_Req&&faculty_TAs_Req_new)
         {
-          setmessage("Entered TA requirement matches the existing one.")
+            setPopupMessage("Entered TA requirement matches the existing one.");
+            setPopup(true);
         }
         else if(faculty_name_new==faculty_name&&faculty_name_new)
         {
-            setmessage("Entered name matches the existing one.")
+            setPopupMessage("Entered name matches the existing one.");
+            setPopup(true);
         }
         else if(faculty_phone_num_new==faculty_phone_num&&faculty_phone_num_new)
         {
-            setmessage("Entered phone number matches the existing one.")
+            setPopupMessage("Entered phone number matches the existing one.");
+            setPopup(true);
         }
         else if(faculty_image_url_new==faculty_image_url_new&&faculty_image_url_new)
         {
-            setmessage("Entered image URL matches the existing one.")
+            setPopupMessage("Entered image URL matches the existing one.");
+            setPopup(true);
         }
         else if(!pattern.test(faculty_phone_num_new)&&faculty_phone_num_new)
         {
-            setmessage("Please enter a valid phone number")
+            setPopupMessage("Please enter a valid phone number");
+            setPopup(true);
         }
         else if(faculty.faculty_pass_new != pass_copy)
         {
-          setmessage("Please repeat the password correctly.")
+            setPopupMessage("Please repeat the password correctly.");
+            setPopup(true);
         }
         else
         {
-            axiosJWT.put("http://localhost:9000/Update_Faculty_Profile", faculty, {headers:{'authorization':"Bearer "+userAccessToken}})
-            .then( res=> {setmessage(res.data.message)} )
+            setLoadingPopup(true);
+            axios.put("http://localhost:9000/Update_Faculty_Profile", faculty, { withCredentials: true }).then( res=> 
+            {
+                setLoadingPopup(false);
+                setSuccess(res.data.success);
+                setPopupMessage(res.data.message);
+                setPopup(true);
+                faculty.email="";
+                faculty.faculty_name_new="";
+                faculty.faculty_phone_num_new="";
+                faculty.faculty_TAs_Req_new="";
+                faculty.faculty_image_url_new="";
+                faculty.faculty_pass_new="";
+                set_pass_copy("");
+                setUpdate(1);
+            })
         }
 
     }
@@ -160,8 +189,7 @@ function Faculty_Profile(props)
 
 
     return(
-        <div>
-            
+        <div>        
             <Header login_state={props} type={"FACULTY"}/>
               <div className='profile_box'>
                 <center><h1>My Profile</h1>
@@ -190,8 +218,8 @@ function Faculty_Profile(props)
                   <h2>Course(s) Offered &emsp;:- &emsp;</h2>{courses.filter(course => course!="").map((course)=>(<h3>{course}</h3>))}<br/>
                   {Arrays_Mapper()}
                   <h2>Current TA(s) &emsp;:- &emsp;</h2>
-                    {arr.filter(el => el[0]!=''&&el[1]!='').map( (Value) => 
-
+                    {
+                        arr.filter(el => el[0]!=''&&el[1]!='').map( (Value) => 
                         (
                             <div>     
                             <h3>Name : {Value[1]}</h3>
@@ -199,16 +227,32 @@ function Faculty_Profile(props)
                             <br/>
                             </div>
                         ))
-                    }
-                    
+                    }   
                   <br/>
-                  
                 </div>
-                <div className="ErrorMsg">{show && Message!=="Profile Updated Successfully." ? Message : ""}</div>
-                <div className="SuccessMsg">{show && Message=="Profile Updated Successfully." ? Message : ""}</div>
                 <div className='btn' onClick={Save_Changes}>Save</div>
                 </center>
               </div>
+              {/* LOADING SCREEN */}
+              <Popup open={loadingPopup} hideBackdrop closeOnDocumentClick={false} onClose={()=>{setLoadingPopup(false)}}>
+                   <center>
+                     <p style={{color:"#003C71", fontSize:"130%", margin:"3%"}}><center>PLEASE WAIT...</center></p>
+                     <br/>
+                     <CircularProgress/>
+                     <br/>
+                     <br/>
+                   </center>
+              </Popup> 
+              <Popup open = {popup} closeOnDocumentClick  onClose={()=>{setPopup(false);setSuccess(0);}}>
+              <center> 
+                  <br/>
+                  <center><div className={success==1 ? 'SuccessMsg' : 'ErrorMsg'}>{popupMessage}</div></center>
+                  <br/>
+                  <div className='export_btn' onClick={()=>{setPopup(false);setSuccess(0)}}>Ok</div>
+                  <br/>
+                  <br/>
+                </center>
+              </Popup>
         </div>
   )
 }

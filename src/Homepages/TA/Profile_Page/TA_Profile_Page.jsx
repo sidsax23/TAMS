@@ -2,25 +2,24 @@ import React from 'react'
 import './profile.css'
 import Header from '../../../Header/header.jsx'
 import { useState } from 'react'
-import axios from 'axios'
-import { useContext } from 'react';
+import Popup from 'reactjs-popup'
+import { CircularProgress } from '@mui/material'
+import { useContext,useEffect} from 'react';
 import {userContext} from '../../../App.jsx'
+import axios from 'axios';
 
 
 function TA_Profile(props) 
 {
-  const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+  
+    const [userEmail,userType] = useContext(userContext);
    
     const [TA_name,set_TA_name]=useState("")
     const [TA_dept,set_dept]=useState("")
-    const [dummy,set_dummy]=useState("")
     const [TA_image_url,set_image_url] = useState("")
     const [TA_phone_num,set_phone_num]=useState("")
     const [pass_copy,set_pass_copy] =useState("")
 
-    const [Message,setmessage] = useState("")
-    const [show,setshow] = useState(false)
-    const [update,set_update]=useState(false)
     const pattern = new RegExp("[6,7,8,9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]") 
 
     const [TA,SetTA] = useState(
@@ -31,35 +30,44 @@ function TA_Profile(props)
         TA_image_url_new:"",
         TA_pass_new:""
     })
-    const [axios_call_count,set_call_count]=useState(0)
 
-    if(axios_call_count==0||update==false)
+    /* The JWT refresh token update is not reflected in the '.then' block of the previous request where the refresh token was updated, 
+    so this variable stores if update is needed and calls the fetch_details function when needed */
+    const [update,setUpdate] = useState(0)
+
+    //Loading Screen
+    const [loadingPopup,setLoadingPopup] = useState(false);
+    //Popup
+    const [popup,setPopup] = useState(false);
+    const [success,setSuccess] = useState(0);
+    const [popupMessage,setPopupMessage] = useState(null);
+
+    const fetch_details = async() =>
     {
-      axiosJWT.post("http://localhost:9000/TA_Profile",props, {headers:{'authorization':"Bearer "+userAccessToken}}).then(
-        res => {
-                  console.log(res)
-                  set_call_count(1)
-                  set_update(true)
-                  res.data.found ? Set_details(res) : set_dummy()
-               })
-
-       function Set_details(res)
-       {
-        
-         set_TA_name(res.data.name)
-         set_phone_num(res.data.phone_num)
-         set_image_url(res.data.image_url)
-         set_dept(res.data.dept)
-       }
- 
+      axios.post("http://localhost:9000/TA_Profile",props, { withCredentials: true }).then(res => 
+      {
+          set_TA_name(res.data.name)
+          set_phone_num(res.data.phone_num)
+          set_image_url(res.data.image_url)
+          set_dept(res.data.dept)
+      })
     }
+
+    useEffect(() =>
+    {
+        fetch_details()
+    },[])
+
+    useEffect(() =>
+    {
+      if(update==1)
+        fetch_details();
+    },[update])
 
     
 
     const HandleChange  = e =>  /*When someone types, its an 'event', denoted and saved in 'e' here. e.target will return where and what the change was*/
     {    
-        setshow(false)
-        setmessage("")
         const {name,value} = e.target
         if(name=="pass_copy")
         {
@@ -76,40 +84,56 @@ function TA_Profile(props)
 
     const Save_Changes = () =>
     {
-        set_update(false)
-        setshow(true)
-        const {email,TA_name_new,TA_phone_num_new,TA_image_url_new,TA_pass_new} = TA
-        TA.email=props.email
-        if(!TA_name_new&&!TA_phone_num_new&&!TA_image_url_new&&!TA_pass_new)
+      const {email,TA_name_new,TA_phone_num_new,TA_image_url_new,TA_pass_new} = TA
+      TA.email=props.email
+      if(!TA_name_new&&!TA_phone_num_new&&!TA_image_url_new&&!TA_pass_new)
+      {
+        setPopupMessage("Please enter new data");
+        setPopup(true);
+      }
+      else if(TA_name_new==TA_name&&TA_name_new)
+      {
+        setPopupMessage("Entered name matches the existing one.");
+        setPopup(true);
+      }
+      else if(TA_phone_num_new==TA_phone_num&&TA_phone_num_new)
+      {
+        setPopupMessage("Entered phone number matches the existing one.");
+        setPopup(true);
+      }
+      else if(TA_image_url==TA_image_url_new&&TA_image_url_new)
+      {
+        setPopupMessage("Entered image URL matches the existing one.");
+        setPopup(true);
+      }
+      else if(!pattern.test(TA_phone_num_new)&&TA_phone_num_new)
+      {
+        setPopupMessage("Please enter a valid phone number");
+        setPopup(true);
+      }
+      else if(TA.TA_pass_new != pass_copy)
+      {
+        setPopupMessage("Please repeat the password correctly.");
+        setPopup(true);
+      }
+      else
+      {
+        setLoadingPopup(true);
+        axios.put("http://localhost:9000/Update_TA_Profile", TA, { withCredentials: true }).then( res=> 
         {
-            setmessage("Please enter new data")
-        }
-        else if(TA_name_new==TA_name&&TA_name_new)
-        {
-            setmessage("Entered name matches the existing one.")
-        }
-        else if(TA_phone_num_new==TA_phone_num&&TA_phone_num_new)
-        {
-            setmessage("Entered phone number matches the existing one.")
-        }
-        else if(TA_image_url==TA_image_url_new&&TA_image_url_new)
-        {
-            setmessage("Entered image URL matches the existing one.")
-        }
-        else if(!pattern.test(TA_phone_num_new)&&TA_phone_num_new)
-        {
-            setmessage("Please enter a valid phone number")
-        }
-        else if(TA.TA_pass_new != pass_copy)
-        {
-          setmessage("Please repeat the password correctly.")
-        }
-        else
-        {
-            axiosJWT.put("http://localhost:9000/Update_TA_Profile", TA, {headers:{'authorization':"Bearer "+userAccessToken}})
-            .then( res=> {setmessage(res.data.message)} )
-        }
-
+          setLoadingPopup(false);
+          setSuccess(res.data.success);
+          setPopupMessage(res.data.message);
+          setPopup(true);
+          TA.email="";
+          TA.TA_name_new="";
+          TA.TA_phone_num_new="";
+          TA.TA_image_url_new="";
+          TA.TA_pass_new="";
+          set_pass_copy("");
+          setUpdate(1);
+        })
+      }
     }
 
 
@@ -141,9 +165,27 @@ function TA_Profile(props)
                   <br/>
                   <br/>
                 </div>
-                <div className="ErrorMsg">{show && Message!=="Profile Updated Successfully." ? Message : ""}</div>
-                <div className="SuccessMsg">{show && Message=="Profile Updated Successfully." ? Message : ""}</div>
                 <div className='btn' onClick={Save_Changes}>Save</div>
+                {/* LOADING SCREEN */}
+                <Popup open={loadingPopup} hideBackdrop closeOnDocumentClick={false} onClose={()=>{setLoadingPopup(false)}}>
+                     <center>
+                       <p style={{color:"#003C71", fontSize:"130%", margin:"3%"}}><center>PLEASE WAIT...</center></p>
+                       <br/>
+                       <CircularProgress/>
+                       <br/>
+                       <br/>
+                     </center>
+                </Popup> 
+                <Popup open = {popup} closeOnDocumentClick  onClose={()=>{setPopup(false);setSuccess(0);}}>
+                <center> 
+                    <br/>
+                    <center><div className={success==1 ? 'SuccessMsg' : 'ErrorMsg'}>{popupMessage}</div></center>
+                    <br/>
+                    <div className='export_btn' onClick={()=>{setPopup(false);setSuccess(0)}}>Ok</div>
+                    <br/>
+                    <br/>
+                  </center>
+                </Popup>
                 </center>
               </div>
         </div>

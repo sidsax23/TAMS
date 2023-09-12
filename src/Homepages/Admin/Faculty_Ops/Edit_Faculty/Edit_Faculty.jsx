@@ -4,17 +4,20 @@ import './Edit_Faculty.css'
 import DataTable from 'react-data-table-component'
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import axios from 'axios'
+import { CircularProgress } from '@mui/material'
 import { CSVLink } from 'react-csv'
 import Popup from 'reactjs-popup'
 import 'reactjs-popup/dist/index.css' 
 import { useContext } from 'react';
 import {userContext} from '../../../../App.jsx'
+import axios from 'axios';
 
-const Edit_Faculty = (props) => {
+const Edit_Faculty = (props) => 
+{
 
-  const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
-   
+  const [userEmail,userType] = useContext(userContext);
+
+  const [fKey,setFKey] = useState(0);
 
   const [faculties,set_faculties] = useState([])
   const [selected_data,set_selected_data] = useState([])
@@ -28,36 +31,50 @@ const Edit_Faculty = (props) => {
   const [inner_popup2,set_inner_popup2] = useState(false)
   const [inner_popup2_message,set_inner_popup2_message] = useState("")
 
+  //Loading Screen
+  const [loadingPopup,setLoadingPopup] = useState(false);
+
+  /* The JWT refresh token update is not reflected in the '.then' block of the previous request where the refresh token was updated, 
+  so this variable stores if update is needed and calls the fetch_details function when needed */
+  const [update,setUpdate] = useState(0);
 
   const get_faculties = async() =>
   {
     try 
     {
-      const response = await axiosJWT.get("http://localhost:9000/fetch_faculties", {headers:{'authorization':"Bearer "+userAccessToken}})
+      const response = await axios.get("http://localhost:9000/fetch_faculties", { withCredentials: true })
       set_faculties(response.data)
       set_filtered_faculties(response.data)
-      set_updation_flag(1)
+      set_updation_flag(1);
+      setUpdate(0);
     } 
     catch (error) 
     {
-      console.log(error)      
+      console.log(error);
+      setUpdate(0);     
     }
-
   }
 
   if(updation_flag==1)
   {
-     set_faculty_names()
+     set_faculty_names();
   }
 
   async function set_faculty_names()
   {
+      var facultyEmails=[];
       for(var i=0;i<faculties.length;i++)
       {
-        const faculty = await axiosJWT.get(`http://localhost:9000/fetch_faculty_by_email?email=${faculties[i].Faculty_Email}`, {headers:{'authorization':"Bearer "+userAccessToken}}) 
-        faculties[i].faculty_name = faculty.data.name; 
+        facultyEmails.push(faculties.Faculty_Email)
       }
-      set_updation_flag(0)
+      await axios.get(`http://localhost:9000/fetch_faculties_by_email_array?facultyEmails=${facultyEmails}`, { withCredentials: true }).then(res=>
+      {
+        for(var i=0;i<faculties.length;i++)
+        {
+          faculties[i].faculty_name = res.data.names[i]; 
+        }
+        set_updation_flag(0);
+      })
   }
   
 
@@ -66,6 +83,12 @@ const Edit_Faculty = (props) => {
     get_faculties();
       
   }, [])
+
+  useEffect(() =>
+  {
+    if(update==1)
+    get_faculties();
+  },[update])
 
   useEffect(() => 
   {
@@ -79,7 +102,6 @@ const Edit_Faculty = (props) => {
   },[search])
 
   
-
   //HEADERS FOR EXPORTING DATA
   const headers = [
     {
@@ -158,6 +180,7 @@ const Edit_Faculty = (props) => {
   //DELETION
   const delete_records = () =>
   {
+    setLoadingPopup(true);
     const Faculty_Details = {
       emails:[],
       ids:[],
@@ -173,20 +196,21 @@ const Edit_Faculty = (props) => {
       }
       
     }
-    
-    axiosJWT.delete(`http://localhost:9000/Delete_Faculties?emails=${Faculty_Details.emails}&TA_Emails=${Faculty_Details.TA_Emails}`, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
+    axios.delete(`http://localhost:9000/Delete_Faculties?emails=${Faculty_Details.emails}&TA_Emails=${Faculty_Details.TA_Emails}`, { withCredentials: true }).then( (res) =>
     {
-
-      set_inner_popup1_message(res.data)
-      set_popup1(false)
-      set_inner_popup1(true)
-      get_faculties()
+      set_inner_popup1_message(res.data);
+      set_popup1(false);
+      set_inner_popup1(true);
+      setUpdate(1);
+      setFKey(fKey+1);
+      setLoadingPopup(false);
     })
   }
 
    //Reset TA-Ship
    const reset_records = () =>
    {
+    setLoadingPopup(true);
      const Faculty_Details = {
        ids:[],
        TA_Emails:[],
@@ -202,12 +226,14 @@ const Edit_Faculty = (props) => {
        }
      }
      
-     axiosJWT.put("http://localhost:9000/Reset_TA-Ship_Faculties", Faculty_Details, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
+     axios.put("http://localhost:9000/Reset_TA-Ship_Faculties", Faculty_Details, { withCredentials: true }).then( (res) =>
      {
-       set_inner_popup2_message(res.data)
-       set_popup2(false)
-       set_inner_popup2(true)
-       get_faculties()
+       set_inner_popup2_message(res.data);
+       set_popup2(false);
+       set_inner_popup2(true);
+       setUpdate(1);
+       setFKey(fKey+1);
+       setLoadingPopup(false);
      })
    }
 
@@ -255,6 +281,7 @@ const Edit_Faculty = (props) => {
           <h1>FACULTY LIST</h1>
           <br/>
           <DataTable 
+            key={fKey} //This is changed after every reset or deletion to ensure that the table is reset
             columns={columns} 
             data={filtered_faculties} 
             fixedHeader 
@@ -314,6 +341,16 @@ const Edit_Faculty = (props) => {
               <br/>
             </center>
           </Popup>
+          {/* LOADING SCREEN */}
+          <Popup open={loadingPopup} hideBackdrop closeOnDocumentClick={false} onClose={()=>{setLoadingPopup(false)}}>
+           <center>
+             <p style={{color:"#003C71", fontSize:"130%", margin:"3%"}}><center>PLEASE WAIT...</center></p>
+             <br/>
+             <CircularProgress/>
+             <br/>
+             <br/>
+           </center>
+          </Popup> 
           </center>
           <br/>
       </div>

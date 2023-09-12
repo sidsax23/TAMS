@@ -6,23 +6,26 @@ import {BsListTask} from 'react-icons/bs'
 import {FaTasks} from 'react-icons/fa'
 import { useContext } from 'react';
 import {userContext} from '../../../App.jsx'
+import axios from 'axios';
 
 const Course_Page = (props) => 
 {
 
-    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+    const [userEmail,userType] = useContext(userContext);
    
     const location=useLocation()
     const course = location.state.course
     const [TAs,set_TAs] = useState([""])
 
+
+    const fetch_TAs = async () =>
+    {
+        const result2 = await axios.get(`http://localhost:9000/fetch_TAs_by_course_faculty?Faculty_Email=${props.email}&Course_Code=${course.code}`, { withCredentials: true })
+        set_TAs(result2.data)
+    }
+    
     useEffect(() => 
     {
-        const fetch_TAs = async () =>
-        {
-            const result2 = await axiosJWT.get(`http://localhost:9000/fetch_TAs_by_course_faculty?Faculty_Email=${props.email}&Course_Code=${course.code}`, {headers:{'authorization':"Bearer "+userAccessToken}})
-            set_TAs(result2.data)
-        }
         fetch_TAs()
 
     },[]) 

@@ -1,28 +1,30 @@
 import React, {useEffect,useState} from 'react'
 import Header from '../../../Header/header.jsx'
 import './Task_Assignment.css'
-import { Link, useLocation } from 'react-router-dom'
-import axios from 'axios'
-import {Faculty} from '../../../Classes/Users.tsx'
+import { useLocation } from 'react-router-dom'
+import Popup from 'reactjs-popup'
+import { CircularProgress } from '@mui/material'
 import { useContext } from 'react';
 import {userContext} from '../../../App.jsx'
+import axios from 'axios';
 
 
 const Task_Assignment = (props) => 
 {
-    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
-   
-    const location=useLocation()
+    const location=useLocation();
     const course = location.state.course
-    const [TAs,set_TAs] = useState([""])
 
+    const [userEmail,userType] = useContext(userContext);
+   
+    const [TAs,set_TAs] = useState([""])
     var arr=[]
     var arr2=[]
     const TA_pattern = new RegExp("TA[0-9]")
-    
 
-    const [Message,setmessage] = useState("")
-    const [show,setshow] = useState(false)
+    /* The JWT refresh token update is not reflected in the '.then' block of the previous request where the refresh token was updated, 
+    so this variable stores if update is needed and calls the fetch_details function when needed */
+    const [update,setUpdate] = useState(0)
+
     const [Task_Temp,set_Task_Temp] = useState(
       {
         name:"",
@@ -34,28 +36,41 @@ const Task_Assignment = (props) =>
         
       })
 
-    
+      
+    //Loading Screen
+    const [loadingPopup,setLoadingPopup] = useState(false)
+
+    //Popup
+    const [popup,setPopup] = useState(false);
+    const [success,setSuccess] = useState(0);
+    const [popupMessage,setPopupMessage] = useState(null);
+
+    const fetch_TAs = async () =>
+    {
+        await axios.get(`http://localhost:9000/fetch_TAs_by_course_faculty?Faculty_Email=${props.email}&Course_Code=${course.code}`, { withCredentials: true }).then(res=>
+        {
+            set_TAs(res.data);
+            setUpdate(0);
+        })
+
+    }
+
     useEffect(() => 
     {
-        const fetch_TAs = async () =>
-        {
-            const result2 = await axiosJWT.get(`http://localhost:9000/fetch_TAs_by_course_faculty?Faculty_Email=${props.email}&Course_Code=${course.code}`, {headers:{'authorization':"Bearer "+userAccessToken}})
-            set_TAs(result2.data)
-        }
         fetch_TAs()
-
     },[]) 
 
-    
+    useEffect(() =>
+    {
+      if(update==1)
+        fetch_TAs();
+    },[update])
 
 
     //Saving user input
     const HandleChange  = e =>  /*When someone types, its an 'event', denoted and saved in 'e' here. e.target will return where and what the change was*/
     {    
-        setshow(false)
-        setmessage("")
         const {name,value} = e.target
-
         if(TA_pattern.test(name))
         {
             Task_Temp.TA_Emails[name[2]-1]=value
@@ -69,7 +84,7 @@ const Task_Assignment = (props) =>
         }
         if(name=="TAs_num")
         {
-            Arr2Setter()
+            Arr2Setter();
         }
 
     }
@@ -78,7 +93,7 @@ const Task_Assignment = (props) =>
     {
         for(var i=0;i<=TAs.length;i++)
         {
-            arr[i]=i
+            arr[i]=i;
         }
     }
 
@@ -87,7 +102,7 @@ const Task_Assignment = (props) =>
         arr2=[]
         for(var i=1;i<=Task_Temp.TAs_num;i++)
         {
-            arr2[i-1]=i
+            arr2[i-1]=i;
         }
     }
 
@@ -101,16 +116,17 @@ const Task_Assignment = (props) =>
 
     const Save_Changes = async() =>
     {
-        setshow(true)
         var all_TAs_flag=0;
         var duplicate_TAs_flag=0;
         if(!Task_Temp.name)
         {
-            setmessage("Please enter task name")
+            setPopupMessage("Please enter task name");
+            setPopup(true);
         }
         else if(!Task_Temp.deadline)
         {
-            setmessage("Please enter task deadline")
+            setPopupMessage("Please enter task deadline");
+            setPopup(true);
         }
         else
         {
@@ -126,14 +142,17 @@ const Task_Assignment = (props) =>
             }
             if(all_TAs_flag==1)
             {
-                setmessage("Please enter all TAs")
+                setPopupMessage("Please enter all TAs");
+                setPopup(true);
             }
             else if(duplicate_TAs_flag==1)
             {  
-                setmessage("TAs must be different")
+                setPopupMessage("TAs must be different");
+                setPopup(true);
             }
             else
             {
+                setLoadingPopup(true);
                 Task_Temp.Email=props.email
                 const task = {
                     Name:Task_Temp.name,
@@ -143,8 +162,21 @@ const Task_Assignment = (props) =>
                     Faculty_Email:Task_Temp.Email,
                     Course_Code:course.code
                 }
-                const response = await axiosJWT.post("http://localhost:9000/Assign_Task", task, {headers:{'authorization':"Bearer "+userAccessToken}})
-                setmessage(response.data.message)  
+                await axios.post("http://localhost:9000/Assign_Task", task, { withCredentials: true }).then(res=>
+                {
+                    setLoadingPopup(false);
+                    setSuccess(res.data.success);
+                    setPopupMessage(res.data.message);
+                    setPopup(true);
+                    Task_Temp.name="";
+                    Task_Temp.description ="";
+                    Task_Temp.deadline = "";
+                    Task_Temp.TAs_num = 0;
+                    Task_Temp.TA_Emails=[""];
+                    Task_Temp.Email = "";
+                    setUpdate(1);
+                })
+                  
             }
         }
         
@@ -218,14 +250,31 @@ const Task_Assignment = (props) =>
                }
             <br/>
             </div>
-      
-            <div className="ErrorMsg">{show && Message!=="Task Assigned Successfully" ? Message : ""}</div>
-            <div className="SuccessMsg">{show && Message=="Task Assigned Successfully" ? Message : ""}</div>
             <div className={Task_Temp.TAs_num==0 ? 'ncbtn' : 'btn'} onClick={Task_Temp.TAs_num==0 ? null : Save_Changes}>ASSIGN TASK</div>
             <br/>
             <br/>
             </center>
       </div>
+       {/* LOADING SCREEN */}
+       <Popup open={loadingPopup} hideBackdrop closeOnDocumentClick={false} onClose={()=>{setLoadingPopup(false)}}>
+             <center>
+               <p style={{color:"#003C71", fontSize:"130%", margin:"3%"}}><center>PLEASE WAIT...</center></p>
+               <br/>
+               <CircularProgress/>
+               <br/>
+               <br/>
+             </center>
+        </Popup> 
+        <Popup open = {popup} closeOnDocumentClick  onClose={()=>{setPopup(false);setSuccess(0);}}>
+        <center> 
+            <br/>
+            <center><div className={success==1 ? 'SuccessMsg' : 'ErrorMsg'}>{popupMessage}</div></center>
+            <br/>
+            <div className='export_btn' onClick={()=>{setPopup(false);setSuccess(0)}}>Ok</div>
+            <br/>
+            <br/>
+          </center>
+        </Popup>
     </div>
 
     )

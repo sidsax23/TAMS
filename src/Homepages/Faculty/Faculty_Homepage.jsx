@@ -2,16 +2,16 @@ import React,{useEffect, useState,useContext} from 'react'
 import './Faculty_Homepage.css'
 import Header from '../../Header/header.jsx'
 import Course_Card from './Course_Card/Course_Card.jsx'
-import { Link } from 'react-router-dom'
 import { userContext } from '../../App.jsx'
+import axios from 'axios';
 
 const Faculty_homepage = (props) => 
 {
-    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+    const [userEmail,userType] = useContext(userContext);
     const [courses,setCourses] = useState([]);
     async function fetch_courses()
     {
-        const result= await axiosJWT.get(`http://localhost:9000/fetch_faculty_courses?facultyEmail=${userEmail}`, {headers:{'authorization':"Bearer "+userAccessToken}})
+        const result= await axios.get(`http://localhost:9000/fetch_faculty_courses?facultyEmail=${userEmail}`, { withCredentials: true })
         setCourses(result.data.courses);
     }
     useEffect(()=>{

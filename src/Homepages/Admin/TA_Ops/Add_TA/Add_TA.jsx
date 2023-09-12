@@ -1,25 +1,33 @@
 import React,{useState} from 'react'
 import Header from '../../../../Header/header.jsx'
 import './Add_TA.css'
-import {Admin} from '../../../../Classes/Users.tsx'
+import Popup from 'reactjs-popup' 
+import { CircularProgress } from '@mui/material';
 import Papa from 'papaparse'
 import {Link} from 'react-router-dom'
 import { useContext } from 'react'
 import {userContext} from '../../../../App.jsx'
+import axios from 'axios';
 
 const Add_TA = (props) => 
 {
-    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
     
-        const [Message,setmessage] = useState("")
-        const [Message2,setmessage2] = useState("")
+        const [userEmail,userType] = useContext(userContext);
+    
         const [bulk_email_flag,set_bulk_email_flag] = useState(false)
         const [bulk_phone_num_flag,set_bulk_phone_num_flag] = useState(false)
         const [duplicate_email_flag,set_duplicate_email_flag] = useState(false)
         const [missing_password_flag,set_missing_password_flag] = useState(false)
         const [no_file_flag,set_no_file_flag] = useState(false)
-        const [show,setshow] = useState(false)
-        const [student_count,set_student_count] = useState(0)
+        const [student_count,set_student_count] = useState(0);
+
+        //Loading Screen
+        const [loadingPopup,setLoadingPopup] = useState(false);
+        //Popup
+        const [popup,setPopup] = useState(false);
+        const [success,setSuccess] = useState(0);
+        const [popupMessage,setPopupMessage] = useState(null);
+
         //Regex for checking phone number validity
         const pattern= new RegExp("[6-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]")
         const [bulk_data,set_bulk_data] = useState("")
@@ -32,8 +40,6 @@ const Add_TA = (props) =>
 
         const HandleChange  = e =>  /*When someone types, its an 'event', denoted and saved in 'e' here. e.target will return where and what the change was*/
         {    
-            setshow(false)
-            setmessage("")
             const {name,value} = e.target
             Set_TA_temp({
                 ...TA_temp, /* Stores the value entered by the user in the respective state variable while the rest remain as their default values ("" in this case)*/
@@ -44,33 +50,39 @@ const Add_TA = (props) =>
 
         const Save_Changes = async() =>
         {
-            setshow(true)
             if(!TA_temp.name)
             {
-                setmessage("Please enter the student's name")
+                setPopupMessage("Please enter the student's name");
+                setPopup(true);
             } 
             else if(!TA_temp.email)
             {
-                setmessage("Please enter the student's Email ID")
+                setPopupMessage("Please enter the student's Email ID");
+                setPopup(true);
             }
             else if(!TA_temp.email.endsWith("@pilani.bits-pilani.ac.in"))
             {
-                setmessage("Please enter a valid BITS Email ID")
+                setPopupMessage("Please enter a valid BITS Email ID");
+                setPopup(true);
             }
             else if(!TA_temp.pass)
             {
-                setmessage("Please enter the student's password")
+                setPopupMessage("Please enter the student's password");
+                setPopup(true);
             } 
             else if(!TA_temp.contact_num)
             {
-                setmessage("Please enter the student's contact number")
+                setPopupMessage("Please enter the student's contact number");
+                setPopup(true);
             }
             else if(!pattern.test(TA_temp.contact_num))
             {
-                setmessage("Please enter a valid contact number")
+                setPopupMessage("Please enter a valid contact number");
+                setPopup(true);
             }
             else
             {
+                setLoadingPopup(true);
                 const TA = {
                     Name:TA_temp.name,
                     Email:TA_temp.email,
@@ -80,14 +92,24 @@ const Add_TA = (props) =>
                     Dept:"CSIS",
                     Application_Status:"Yet to Apply"
                 }
-                const response = await axiosJWT.post("http://localhost:9000/Add_TA", TA, {headers:{'authorization':"Bearer "+userAccessToken}})
-                setmessage(response.data.message)              
+                await axios.post("http://localhost:9000/Add_TA", TA, { withCredentials: true }).then(res=>
+                {
+                    setLoadingPopup(false);
+                    setSuccess(res.data.success);
+                    setPopupMessage(res.data.message);
+                    setPopup(true);
+                    TA_temp.name="";
+                    TA_temp.email="";
+                    TA_temp.pass="";
+                    TA_temp.contact_num="";   
+                })
+      
+                
             }
         }
 
         const ChangeHandler = (e) =>
         {
-            setshow(true)
             // Passing file data (e.target.files[0]) to parse using Papa.parse
             set_bulk_email_flag(false)
             set_bulk_phone_num_flag(false)
@@ -121,20 +143,23 @@ const Add_TA = (props) =>
                                 if(!row_values[i][1].endsWith("@pilani.bits-pilani.ac.in"))
                                 {
                                     set_bulk_email_flag(true)
-                                    setmessage2("Invalid BITS email found. Please try again!")
+                                    setPopupMessage("Invalid BITS email found. Please try again!");
+                                    setPopup(true);
                                     
                                     break;
                                 }
                                 if(!pattern.test(row_values[i][3]))
                                 {
                                     set_bulk_phone_num_flag(true)
-                                    setmessage2("Invalid contact number found. Please try again!")
+                                    setPopupMessage("Invalid contact number found. Please try again!");
+                                    setPopup(true);
                                     break;
                                 }
                                 if(!row_values[i][2])
                                 {
                                     set_missing_password_flag(true)
-                                    setmessage2("One/more student(s) is/are missing their password.")
+                                    setPopupMessage("One/more student(s) is/are missing their password.");
+                                    setPopup(true);
                                     break;
                                 }
                                 emails.push(row_values[i][1])
@@ -144,13 +169,15 @@ const Add_TA = (props) =>
                             if(unique_emails.size!=emails.length)
                             {
                                 set_duplicate_email_flag(true)
-                                setmessage2("Duplicate emails found. Please try again.")
+                                setPopupMessage("Duplicate emails found. Please try again.");
+                                setPopup(true);
                             }
                             set_bulk_data(row_values)
                         }
                         else
                         {
-                            setmessage2("Incorrect format found in the uploaded file. Please try again!")
+                            setPopupMessage("Incorrect format found in the uploaded file. Please try again!");
+                            setPopup(true);
                         }     
                     },
                 });
@@ -165,31 +192,45 @@ const Add_TA = (props) =>
 
         const Bulk_Upload = async() => 
         {
-            setshow(true)
+            setLoadingPopup(true);
             if(bulk_phone_num_flag==false&&bulk_email_flag==false&&no_file_flag==false&&duplicate_email_flag==false&&missing_password_flag==false)
             {
+                const TA = {
+                    Names:[],
+                    Emails:[],
+                    Types:[],
+                    Passes:[],
+                    Contact_Nums:[],
+                    Depts:[],
+                    Application_Statuses:[]
+                }
                 for(var i=0;i<student_count;i++)
                 {
-                    const TA = {
-                        Name:bulk_data[i][0],
-                        Email:bulk_data[i][1],
-                        Type:"TA",
-                        Pass:bulk_data[i][2],
-                        Contact_Num:Number(bulk_data[i][3]),
-                        Dept:"CSIS",
-                        Application_Status:"Yet to Apply"
-                    }
-                    const response = await axiosJWT.post("http://localhost:9000/Add_TA", TA, {headers:{'authorization':"Bearer "+userAccessToken}})
-                    if(response.data.message!="Student Successfully Added")
-                    {
-                        console.log("Student (with Email ID ",bulk_data[i][1],") could not be uploaded. Error : ",response)
-                    }
-                    setmessage2("Student(s) Successfully Added")
-                }      
+                    TA.Names.push(bulk_data[i][0])
+                    TA.Emails.push(bulk_data[i][1])
+                    TA.Types.push("TA")
+                    TA.Passes.push(bulk_data[i][2])
+                    TA.Contact_Nums.push(Number(bulk_data[i][3]))
+                    TA.Depts.push("CSIS")
+                    TA.Application_Statuses.push("Yet to Apply")
+                }
+                await axios.post("http://localhost:9000/Add_TA_in_Bulk", TA, { withCredentials: true }).then(res=>
+                {
+                    for(var i=0;i<res.data.errs.length;i++)
+                        console.log("Student (with Email ID ",res.data.emailsErr[i],") could not be uploaded. Error : ",res.data.errs[i]);
+                    setLoadingPopup(false);
+                    setSuccess(1);
+                    setPopupMessage("Student(s) Successfully Added");
+                    setPopup(true);
+                })
+                    
+                   
             }
             else
             {
-                setmessage2("Please upload an appropriate file")
+                setLoadingPopup(false);
+                setPopupMessage("Please upload an appropriate file");
+                setPopup(true);
             }
         }
 
@@ -205,8 +246,6 @@ const Add_TA = (props) =>
 		            Upload File (CSV only) : &emsp;<input type="file" accept="*.csv" onChange={ChangeHandler} />
                     <br/>
                     <br/>
-                    <div className="ErrorMsg">{show && Message2!=="Student(s) Successfully Added" ? Message2 : ""}</div>
-                    <div className="SuccessMsg">{show && Message2=="Student(s) Successfully Added" ? Message2 : ""}</div>
                     <div className='btn' onClick={Bulk_Upload}>Upload</div>
                     <br/>
                     <br/>
@@ -223,13 +262,35 @@ const Add_TA = (props) =>
                         <h3>Contact Number &emsp;: <br/><input type="Number" name="contact_num" placeholder="Enter Student Contact Number" className='details_input' onChange={HandleChange} value={TA_temp.contact_num}/></h3>
                         <br/>
                     </div>
-                    <div className="ErrorMsg">{show && Message!=="Student Successfully Added!" ? Message : ""}</div>
-                    <div className="SuccessMsg">{show && Message=="Student Successfully Added!" ? Message : ""}</div>
                     <div className='btn' onClick={Save_Changes}>ADD</div>
                     <br/>
                     <br/>
                     </center>
               </div>
+
+              {/* LOADING SCREEN */}
+              <Popup open={loadingPopup} hideBackdrop closeOnDocumentClick={false} onClose={()=>{setLoadingPopup(false)}}>
+                     <center>
+                       <p style={{color:"#003C71", fontSize:"130%", margin:"3%"}}><center>PLEASE WAIT...</center></p>
+                       <br/>
+                       <CircularProgress/>
+                       <br/>
+                       <br/>
+                     </center>
+                </Popup> 
+
+                <Popup open = {popup} closeOnDocumentClick  onClose={()=>{setPopup(false);setSuccess(0);}}>
+                <center> 
+                    <br/>
+                    <center><div className={success==1 ? 'SuccessMsg' : 'ErrorMsg'}>{popupMessage}</div></center>
+                    <br/>
+                    <div className='export_btn' onClick={()=>{setPopup(false);setSuccess(0);}}>Ok</div>
+                    <br/>
+                    <br/>
+                  </center>
+                </Popup>
+
+
             </div>
         )
         

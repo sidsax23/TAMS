@@ -1,14 +1,15 @@
 import { useContext } from 'react'
 import '../Header/header.css'
 import Logo from './Assets/Transparent_Logo.png'
+import axios from 'axios'
 import {CgProfile} from 'react-icons/cg'
 import {Link} from 'react-router-dom'
-import {userContext} from '../App.jsx'
-import {logout} from '../login_functions.jsx' 
+import {userContext} from '../App.jsx' 
+import secureLocalStorage from 'react-secure-storage'
 
 const Header = (props) => 
 {
-    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+    const [userEmail,userType,setUserEmail,setUserType] = useContext(userContext);
     return(
         <div>
             <header>
@@ -23,13 +24,17 @@ const Header = (props) =>
                 <div className="logout_btn" 
                     onClick={() => 
                                 {
-                                    logout(setUserEmail,setUserType,userAccessToken,userRefreshToken,axiosJWT)
+                                    //LOGOUT PROCESS
+                                    setUserEmail(null);
+                                    setUserType(null);
+                                    secureLocalStorage.removeItem('userEmail');
+                                    secureLocalStorage.removeItem('userType');
+                                    axios.post("http://localhost:9000/Logout", null, { withCredentials: true });
                                 }}>
                     Logout
                 </div>
             </header>
         </div>
-
     )
 }
 

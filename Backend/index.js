@@ -8,13 +8,18 @@ import CourseModel from './Models/Course_Schema.js'
 import TaskModel from './Models/Task_Schema.js'
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken'
+import cookieParser from 'cookie-parser';
 
 // Needed for configuring any App with Node.js
 const app = express()
 //const jwt = require("jsonwebtoken")
 app.use(express.json())
 app.use(express.urlencoded())
-app.use(cors())
+app.use(cors({
+    origin:'http://localhost:3000',
+    credentials:true
+}))
+app.use(cookieParser())
 app.listen(9000,() => {console.log("Back-end Started at port 9000")})
 
 // Creating DB. Name of DB = Login_pagesDB
@@ -74,8 +79,8 @@ here it will be available as long as the TAMS backend is running by storing it i
 let refreshTokens=[]
 function generateJWTAccessToken(userEmail,userType)
 {
-    //Access token will expire in 5 minutes. Refresh token may be used to regenerate it post that.
-    return jwt.sign({email:userEmail, type:userType}, accessTokenSecretKey, {expiresIn:"5m"})
+    //Access token will expire in 10 seconds. Refresh token may be used to regenerate it post that.
+    return jwt.sign({email:userEmail, type:userType}, accessTokenSecretKey, {expiresIn:"10s"})
 }
 function generateJWTRefreshToken(userEmail,userType)
 {
@@ -84,18 +89,52 @@ function generateJWTRefreshToken(userEmail,userType)
 }
 function verify(req,res,next)
 {
-    const authHeader=req.headers.authorization;
-    if(authHeader)
+    const token=req.cookies.accessToken;
+    if(token)
     {
-        const token=authHeader.split(" ")[1];
         jwt.verify(token, accessTokenSecretKey, (err,user)=>
         {
             if(err)
             {
-                return res.status(403).json("Invalid Token!");
+                //Invalid access token - check for refresh token
+                const refreshToken = req.cookies.refreshToken;
+                //send error if there is no token or it's invalid
+                if (!refreshToken) 
+                {
+                    return res.status(401).json("You are not authenticated!");
+                }
+                if (!refreshTokens.includes(refreshToken)) 
+                {
+                  return res.status(403).json("Refresh token is not valid!");
+                }
+
+                jwt.verify(refreshToken, refreshTokenSecretKey, (err, user) => 
+                {
+                    //Console log the error if there is one
+                    err && console.log(err);
+
+                    //Remove this refresh token from the array as it has been used
+                    refreshTokens = refreshTokens.filter((token) => token !== refreshToken);
+                    
+                    //Generate the new tokens
+                    const newAccessToken = generateJWTAccessToken(user.email,user.type);
+                    const newRefreshToken = generateJWTRefreshToken(user.email,user.type);
+                    refreshTokens.push(newRefreshToken);
+                    
+                    res.cookie('accessToken', newAccessToken, { httpOnly: true, sameSite:'Lax' });
+                    res.cookie('refreshToken', newRefreshToken, { httpOnly: true , sameSite:'Lax'});
+                    res.cookie('loggedIn',1,{ httpOnly: false, sameSite:'Lax' })  //Needed to store the fact that the user session is still going on
+
+                    req.user = user;
+                    next();
+                });
+
             }
-            req.user = user;
-            next();
+            else
+            {
+                req.user = user;
+                next();
+            }
         })
     }
     else
@@ -122,17 +161,20 @@ app.post("/Login", (req,res) =>
                 {
                     const accessToken = generateJWTAccessToken(user.email,user.type);
                     const refreshToken = generateJWTRefreshToken(user.email,user.type);
-                    refreshTokens.push(refreshToken);                        
-                    res.send({message:"Login Successful",userEmail:user.email,userType:user.type,accessToken:accessToken,refreshToken:refreshToken})
+                    refreshTokens.push(refreshToken);
+                    res.cookie('accessToken', accessToken, { httpOnly: true, sameSite:'Lax' }); 
+                    res.cookie('refreshToken', refreshToken, { httpOnly: true, sameSite:'Lax' });    
+                    res.cookie('loggedIn',1,{ httpOnly: false, sameSite:'Lax' })  //Needed to store the fact that the user session is still going on
+                    res.send({success:1,userEmail:user.email,userType:user.type})
                 }
                 else
                 {
-                    res.send({message:"Incorrect Password Entered."})
+                    res.send({success:0,message:"Incorrect Password Entered."})
                 }
             }
             else
             {
-                res.send({message:"Looks like you are not a registered user."})
+                res.send({success:0,message:"Looks like you are not a registered user."})
             }
         })
     }
@@ -145,19 +187,22 @@ app.post("/Login", (req,res) =>
                 const passwordCompare = await bcrypt.compare(pass, user.pass);
                 if(passwordCompare)
                 {
-                    const accessToken = generateJWTAccessToken(user.email,user.type); 
+                    const accessToken = generateJWTAccessToken(user.email,user.type);
                     const refreshToken = generateJWTRefreshToken(user.email,user.type);
                     refreshTokens.push(refreshToken);
-                    res.send({message:"Login Successful",userEmail:user.email,userType:user.type,accessToken:accessToken,refreshToken:refreshToken})
+                    res.cookie('accessToken', accessToken, { httpOnly: true, sameSite:'Lax' }); 
+                    res.cookie('refreshToken', refreshToken, { httpOnly: true, sameSite:'Lax' });    
+                    res.cookie('loggedIn',1,{ httpOnly: false, sameSite:'Lax' })  //Needed to store the fact that the user session is still going on
+                    res.send({success:1,userEmail:user.email,userType:user.type})
                 }
                 else
                 {
-                    res.send({message:"Incorrect Password Entered."})
+                    res.send({success:0,message:"Incorrect Password Entered."})
                 }
             }
             else
             {
-                res.send({message:"Looks like you are not a registered user."})
+                res.send({success:0,message:"Looks like you are not a registered user."})
             }
         })
     }
@@ -173,16 +218,19 @@ app.post("/Login", (req,res) =>
                     const accessToken = generateJWTAccessToken(user.email,user.type);
                     const refreshToken = generateJWTRefreshToken(user.email,user.type);
                     refreshTokens.push(refreshToken);
-                    res.send({message:"Login Successful",userEmail:user.email,userType:user.type,accessToken:accessToken,refreshToken:refreshToken})
+                    res.cookie('accessToken', accessToken, { httpOnly: true, sameSite:'Lax' }); 
+                    res.cookie('refreshToken', refreshToken, { httpOnly: true, sameSite:'Lax' });    
+                    res.cookie('loggedIn',1,{ httpOnly: false, sameSite:'Lax' })  //Needed to store the fact that the user session is still going on
+                    res.send({success:1,userEmail:user.email,userType:user.type})
                 }
                 else
                 {
-                    res.send({message:"Incorrect Password Entered."})
+                    res.send({success:0,message:"Incorrect Password Entered."})
                 }
             }
             else
             {
-                res.send({message:"Looks like you are not a registered user."})
+                res.send({success:0,message:"Looks like you are not a registered user."})
             }
         })
     }
@@ -191,43 +239,13 @@ app.post("/Login", (req,res) =>
 //Logout (Removing Refresh Token)
 app.post("/Logout", verify, (req, res) => 
 {
-    const refreshToken = req.body.token;
+    const refreshToken = req.cookies.refreshToken;
     refreshTokens = refreshTokens.filter((token) => token !== refreshToken);
+    res.clearCookie('accessToken');
+    res.clearCookie('refreshToken');
+    res.clearCookie('loggedIn');
     res.status(200).json("You logged out successfully.");
 });
-
-//Creating new access and refresh tokens from existing refresh token
-app.post("/Refresh", (req,res)=>
-{
-    //take the refresh token from the user
-    const refreshToken = req.body.token;
-    //send error if there is no token or it's invalid
-    if (!refreshToken) 
-    {
-        return res.status(401).json("You are not authenticated!");
-    }
-    if (!refreshTokens.includes(refreshToken)) 
-    {
-      return res.status(403).json("Refresh token is not valid!");
-    }
-    
-    jwt.verify(refreshToken, refreshTokenSecretKey, (err, user) => {
-      err && console.log(err);
-      //Remove this refresh token from the array as it has been used
-      refreshTokens = refreshTokens.filter((token) => token !== refreshToken);
-
-      //Generate the new tokens
-      const newAccessToken = generateJWTAccessToken(user.email,user.type);
-      const newRefreshToken = generateJWTRefreshToken(user.email,user.type);
-      refreshTokens.push(newRefreshToken);
-  
-      res.status(200).json({
-        accessToken: newAccessToken,
-        refreshToken: newRefreshToken,
-      });
-    });
-})
-
 
 //Recover Password
 app.post("/Recover_pass", async (req,res) => 
@@ -254,52 +272,66 @@ app.post("/Recover_pass", async (req,res) =>
     // Searches the DB for a user with entered email ID. If it finds one, it returns the user otherwise it returns an error
     if(type=="TA")
     {
-        TAModel.updateOne({email:email}, query, (err,user) => 
+        TAModel.findOne({email:email}, (err,user) =>
         {
             if(user)
             {
-                TAModel.findOne({email:email}, (err,user) =>
+                TAModel.updateOne({email:email}, query, (err,user) => 
                 {
-                    res.send({found:true,rpass:new_pass,rname:user.name})
+                    if(err)
+                    {
+                        console.log(err);
+                    }
                 })
-            }
+                res.send({found:true,rpass:new_pass,rname:user.name})
+            } 
             else
             {
-                res.send({found:false})
+                res.send({found:false,message:"There is no TA account assocciated with this email ID."})
             }
         })
+
     }
     if(type=="Faculty")
     {
-        FacultyModel.updateOne({email:email}, query, (err,user) => 
+        FacultyModel.findOne({email:email}, (err,user) =>
         {
             if(user)
             {
-                FacultyModel.findOne({email:email}, (err,user) =>
+                FacultyModel.updateOne({email:email}, query, (err,user) => 
                 {
-                    res.send({found:true,rpass:new_pass,rname:user.name})
+                    if(err)
+                    {
+                        console.log(err);
+                    }
                 })
-            }
+                res.send({found:true,rpass:new_pass,rname:user.name})
+            } 
             else
             {
-                res.send({found:false})
+                res.send({found:false,message:"There is no Faculty account assocciated with this email ID."})
             }
         })
     }
+    
     if(type=="Admin")
     {
-        AdminModel.updateOne({email:email}, query, (err,user) => 
+        AdminModel.findOne({email:email}, (err,user) =>
         {
             if(user)
             {
-                AdminModel.findOne({email:email}, (err,user) =>
+                AdminModel.updateOne({email:email}, query, (err,user) => 
                 {
-                    res.send({found:true,rpass:new_pass,rname:user.name})
-                })  
-            }
+                    if(err)
+                    {
+                        console.log(err);
+                    }
+                })
+                res.send({found:true,rpass:new_pass,rname:user.name})
+            } 
             else
             {
-                res.send({found:false})
+                res.send({found:false,message:"There is no Admin account assocciated with this email ID."})
             }
         })
     }
@@ -313,73 +345,159 @@ app.post("/Add_TA", verify , async (req,res) =>
     //req.user is obtained from the jwt token after "verify" is executed, as we put req.user=user and user in the context of jwt token has userId and userType
     if(req.user.type=="Faculty"||req.user.type=="Admin") 
     {
-        //const {name,type,email,pass,phone_num,dept,Application_Status} = req.body
-        const name=req.body.Name
-        const type=req.body.Type
-        const email=req.body.Email
-        const password=req.body.Pass
-        const phone_num=req.body.Contact_Num
-        const dept=req.body.Dept
-        const Application_Status=req.body.Application_Status
+        const email=req.body.Email;
+        const phone_num=req.body.Contact_Num;
 
-        const salt = await bcrypt.genSalt(10);
-        const securePassword = await bcrypt.hash(password, salt);
-        const pass = securePassword;
-
-        TAModel.findOne({email:email}, (err,TA) => 
+        try 
         {
-                if(TA)
-                {
-                    res.send({message:"A student with this email ID already exists."})
-                }
-                else
-                {
-                    TAModel.findOne({phone_num:phone_num}, (err,TA) =>
+            const facultyExists = await FacultyModel.findOne({ email: email });
+            if (facultyExists) 
+            {
+                res.send({success:0,message:"A faculty with this email ID already exists."});
+            }
+              
+            const taExists = await TAModel.findOne({ email: email });
+            if (taExists) 
+            {
+                res.send({success:0,message:"A student with this email ID already exists."});
+            }
+            const adminExists = await AdminModel.findOne({ email: email });
+            if (adminExists) 
+            {
+                res.send({success:0,message:"An admin with this email ID already exists."});
+            }
+
+            const phoneNumExists = await TAModel.findOne({ phone_num: phone_num });
+            if (phoneNumExists) 
+            {
+                res.send({success:0,message:"This phone number is already taken."});
+            }
+
+            //All ok to upload
+            if(!facultyExists&&!taExists&&!adminExists&&!phoneNumExists)
+            {
+                const name=req.body.Name;
+                const type=req.body.Type;
+                const password=req.body.Pass;
+                const dept=req.body.Dept;
+                const Application_Status=req.body.Application_Status;
+                const salt = await bcrypt.genSalt(10);
+                const securePassword = await bcrypt.hash(password, salt);
+                const pass = securePassword;
+    
+                const TA  = new TAModel(
                     {
-                        if(TA)
-                        {
-                            res.send({message:"This phone number is already taken."})
-                        }
-                        else
-                        {
-                            const TA  = new TAModel(
-                                {
-                                    name,
-                                    type,
-                                    email,
-                                    pass,
-                                    phone_num,
-                                    dept,
-                                    Application_Status
-                                })
-                                TA.save( err => 
-                                    {
-                                        if(err)
-                                        {
-                                            console.log(err)
-                                        }
-                                        else
-                                        {
-                                            res.send({message:"Student Successfully Added!"})
-                                        }
-                                    })
-
-                        }
-
+                        name,
+                        type,
+                        email,
+                        pass,
+                        phone_num,
+                        dept,
+                        Application_Status
                     })
-
-
-                }
-
-        })
+                await TA.save();
+                res.send({success:1,message:"TA Added Successfully!"})
+            }
+        } 
+        catch (err) 
+        {
+            console.error(err);
+            res.send({success:0,message:"TA could not be saved! Please try again later."});
+        }
     }
     else
     {
-        res.status(403).send({message:"You are not allowed to add TAs!"})
+        res.status(403).send({success:0,message:"You are not allowed to add TAs!"})
     }
 
 })
 
+
+
+//ADDING TA IN BULK
+app.post("/Add_TA_in_Bulk", verify, async (req,res) => 
+{
+    if(req.user.type=="Admin") 
+    {
+        var errs=[];
+        var emailsErr=[];
+        for(var i=0;i<req.body.Emails.length;i++)
+        {
+            const email=req.body.Emails[i];
+            const phone_num=req.body.Contact_Nums[i];
+
+            try 
+            {
+                const facultyExists = await FacultyModel.findOne({ email: email });
+                if (facultyExists) 
+                {
+                    errs.push("A faculty with this email ID already exists.");
+                    emailsErr.push(email);
+                    continue;
+                }
+
+                const taExists = await TAModel.findOne({ email: email });
+                if (taExists) 
+                {
+                    errs.push("A student with this email ID already exists.");
+                    emailsErr.push(email);
+                    continue;
+                }
+
+                const adminExists = await AdminModel.findOne({ email: email });
+                if (adminExists) 
+                {
+                    errs.push("An admin with this email ID already exists.");
+                    emailsErr.push(email);
+                    continue;
+                }
+    
+                const phoneNumExists = await TAModel.findOne({ phone_num: phone_num });
+                if (phoneNumExists) 
+                {
+                    errs.push("This phone number is already taken.");
+                    emailsErr.push(email);
+                    continue;
+                }
+
+                //All ok to upload
+                const name=req.body.Names[i];
+                const type=req.body.Types[i];
+                const password=req.body.Passes[i];
+                const dept=req.body.Depts[i];
+                const Application_Status=req.body.Application_Statuses[i];
+                const salt = await bcrypt.genSalt(10);
+                const securePassword = await bcrypt.hash(password, salt);
+                const pass = securePassword;
+    
+                const TA  = new TAModel(
+                    {
+                        name,
+                        type,
+                        email,
+                        pass,
+                        phone_num,
+                        dept,
+                        Application_Status
+                    })
+                await TA.save();
+            } 
+            catch (err) 
+            {
+                console.error(err);
+                errs.push("TA could not be saved. (",err,")");
+                emailsErr.push(email);
+                continue;
+            }
+        }
+        res.send({message:"TAs Added Successfully!",errs:errs,emailsErr:emailsErr})
+    }
+    else
+    {
+        res.status(403).send({success:0,message:"You are not allowed to add faculties!"})
+    }
+
+})
 
 
 app.post("/Add_Course", verify, (req,res) => 
@@ -410,24 +528,69 @@ app.post("/Add_Course", verify, (req,res) =>
                         if(err)
                         {
                             console.log(err)
+                            res.send({success:0,message:"Error occurred! Course could not be added!"})
                         }
                         else
                         {
-                            res.send({message:"Course Successfully Added"})
+                            res.send({success:1,message:"Course Added Successfully!"})
                         }
                     })
-
                 }
-
         })
     }
     else
     {
         res.status(403).send({message:"You are not allowed to add Courses!"})
     }
+})
+
+
+//ADDING FACULTY IN BULK
+app.post("/Add_Course_in_Bulk", verify, async (req,res) => 
+{
+    if(req.user.type=="Admin") 
+    {
+        var errs=[];
+        var codesErr=[];
+        for(var i=0;i<req.body.Codes.length;i++)
+        {
+            const code=req.body.Codes[i];
+            try 
+            {
+                const courseExists = await CourseModel.findOne({ code: code });
+                if (courseExists) 
+                {
+                    errs.push("A course with this Course Code already exists.");
+                    codesErr.push(code);
+                    continue;
+                }
+
+                //All ok to upload
+                const name=req.body.Names[i];
                 
+                const course = new CourseModel({
+                    name,
+                    code
+                });
+                await course.save();
+            } 
+            catch (err) 
+            {
+                console.error(err);
+                errs.push("Course could not be saved. (",err,")");
+                codesErr.push(code);
+                continue;
+            }
+        }
+        res.send({message:"Courses Added Successfully!",errs:errs,codesErr:codesErr})
+    }
+    else
+    {
+        res.status(403).send({success:0,message:"You are not allowed to add faculties!"})
+    }
 
 })
+
 
 
 //RETREIVING COURSES BACKEND
@@ -435,21 +598,21 @@ app.get("/fetch_courses", verify, (req,res) =>
 {
     if(req.user) 
     {
-        CourseModel.find((err,course) => 
+        CourseModel.find((err,courses) => 
         {
             if(err)
             {
-                res.send({message:"No courses available"})
+                res.send({success:0,message:"No courses available"})
             }
             else
             {
-                res.send(course)
+                res.send({success:1,courses:courses})
             }
         })
     }
     else
     {
-        res.status(403).send({message:"You are not allowed to view courses!"})
+        res.status(403).send({success:0,message:"You are not allowed to view courses!"})
     }
 
 
@@ -552,7 +715,6 @@ app.get("/fetch_faculty",verify, (req,res) =>
     {
         res.status(403).send({message:"You are not allowed to view faculties!"})
     }
-
 })
  
 //RETREIVING FACULTY BY EMAIL
@@ -565,17 +727,39 @@ app.get("/fetch_faculty_by_email",verify, (req,res) =>
         {
             if(err)
             {
-                console.log(err)
+                res.send({success:0,message:"Faculty not found! Please try again later."});
             }
             else
             {
-                res.send(Faculty)
+                res.send({success:1,Faculty:Faculty});
             }
         })
     }
     else
     {
-        res.status(403).send({message:"You are not allowed to view faculties!"})
+        res.status(403).send({success:0,message:"You are not allowed to view faculties!"})
+    }
+
+})
+
+//RETREIVING FACULTY BY EMAIL
+app.get("/fetch_faculties_by_email_array",verify, async (req,res) => 
+{
+    if(req.user) 
+    {
+        const emails = req.query.facultyEmails.split(",");
+        let names=[];
+        for(var i=0;i<emails.length;i++)
+        {
+            const Faculty = await FacultyModel.findOne({email:emails[i]});
+            if(Faculty)
+                names.push(Faculty.name);        
+        }
+        res.send({success:1,names:names});
+    }
+    else
+    {
+        res.status(403).send({success:0,message:"You are not allowed to view faculties!"})
     }
 
 })
@@ -586,83 +770,162 @@ app.post("/Add_Faculty", verify, async (req,res) =>
 {
     if(req.user.type=="Admin") 
     {
-        const name=req.body.Name
-        const type=req.body.Type
         const email=req.body.Email
-        const password=req.body.Pass
         const phone_num=req.body.Contact_Num
-        const dept=req.body.Dept
-        const courses=req.body.Courses
-        const TAs_Req = req.body.TAs_Required
-        const image_url = req.body.Image_URL
-
-        const salt = await bcrypt.genSalt(10);
-        const securePassword = await bcrypt.hash(password, salt);
-        const pass = securePassword;
-
-        FacultyModel.findOne({email:email}, (err,Faculty) => 
+        
+        try 
         {
-                if(Faculty)
-                {
-                    res.send({message:"A faculty with this email ID already exists."})
-                }
-                else
-                {
-                    TAModel.findOne({email:email}, (err,TA) =>
-                    {
-                        if(TA)
-                        {
-                            res.send({message:"A student with this email ID already exists."})
-                        }
-                        else
-                        {    
-                            FacultyModel.findOne({phone_num:phone_num}, (err,Faculty) =>
-                            {
-                                if(Faculty)
-                                {
-                                    res.send({message:"This phone number is already taken."})
-                                }
-                                else
-                                {
-                                    const Faculty  = new FacultyModel(
-                                        {
-                                            name,
-                                            type,
-                                            email,
-                                            pass,
-                                            phone_num,
-                                            dept,
-                                            TAs_Req,
-                                            courses,
-                                            image_url
-                                        })
+            const facultyExists = await FacultyModel.findOne({ email: email });
+            if (facultyExists) 
+            {
+                res.send({success:0,message:"A faculty with this email ID already exists."});
+            }
+              
+            const taExists = await TAModel.findOne({ email: email });
+            if (taExists) 
+            {
+                res.send({success:0,message:"A student with this email ID already exists."});
+            }
+            const adminExists = await AdminModel.findOne({ email: email });
+            if (adminExists) 
+            {
+                res.send({success:0,message:"An admin with this email ID already exists."});
+            }
 
-                                        Faculty.save( err => 
-                                            {
-                                                if(err)
-                                                {
-                                                    console.log(err)
-                                                }
-                                                else
-                                                {
-                                                    res.send({message:"Faculty Successfully Added"})
-                                                }
-                                            })
-                                        
-                                }
-                            
-                            })
-                        }
-                    })
+            const phoneNumExists = await FacultyModel.findOne({ phone_num: phone_num });
+            if (phoneNumExists) 
+            {
+                res.send({success:0,message:"This phone number is already taken."});
+            }
 
+            //All ok to upload
+            if(!facultyExists&&!taExists&&!adminExists&&!phoneNumExists)
+            {
+                const name=req.body.Name
+                const type=req.body.Type
+                const password=req.body.Pass
+                const dept=req.body.Dept
+                const courses=req.body.Courses
+                const TAs_Req = req.body.TAs_Required
+                const image_url = req.body.Image_URL         
+                const salt = await bcrypt.genSalt(10);
+                const securePassword = await bcrypt.hash(password, salt);
+                const pass = securePassword;
 
-                }
-
-        })
+                const faculty = new FacultyModel({
+                    name,
+                    type,
+                    email,
+                    pass,
+                    phone_num,
+                    dept,
+                    TAs_Req,
+                    courses,
+                    image_url
+                });
+                await faculty.save();
+                res.send({success:1,message:"Faculty Added Successfully!"})
+            }
+        } 
+        catch (err) 
+        {
+            console.error(err);
+            res.send({success:0,message:"Faculty could not be saved! Please try again later."});
+        }
     }
     else
     {
-        res.status(403).send({message:"You are not allowed to add faculties!"})
+        res.status(403).send({success:0,message:"You are not allowed to add faculties!"})
+    }
+
+})
+
+
+
+//ADDING FACULTY IN BULK
+app.post("/Add_Faculty_in_Bulk", verify, async (req,res) => 
+{
+    if(req.user.type=="Admin") 
+    {
+        var errs=[];
+        var emailsErr=[];
+        for(var i=0;i<req.body.Emails.length;i++)
+        {
+            const email=req.body.Emails[i];
+            const phone_num=req.body.Contact_Nums[i];
+
+            try 
+            {
+                const facultyExists = await FacultyModel.findOne({ email: email });
+                if (facultyExists) 
+                {
+                    errs.push("A faculty with this email ID already exists.");
+                    emailsErr.push(email);
+                    continue;
+                }
+
+                const taExists = await TAModel.findOne({ email: email });
+                if (taExists) 
+                {
+                    errs.push("A student with this email ID already exists.");
+                    emailsErr.push(email);
+                    continue;
+                }
+
+                const adminExists = await AdminModel.findOne({ email: email });
+                if (adminExists) 
+                {
+                    errs.push("An admin with this email ID already exists.");
+                    emailsErr.push(email);
+                    continue;
+                }
+    
+                const phoneNumExists = await FacultyModel.findOne({ phone_num: phone_num });
+                if (phoneNumExists) 
+                {
+                    errs.push("This phone number is already taken.");
+                    emailsErr.push(email);
+                    continue;
+                }
+
+                //All ok to upload
+                const name=req.body.Names[i];
+                const type=req.body.Types[i];
+                const password=req.body.Passes[i];
+                const dept=req.body.Depts[i];
+                const courses=req.body.Courses[i];
+                const TAs_Req = req.body.TAs_Required[i];
+                const image_url = "";
+                const salt = await bcrypt.genSalt(10);
+                const securePassword = await bcrypt.hash(password, salt);
+                const pass = securePassword;
+    
+                const faculty = new FacultyModel({
+                    name,
+                    type,
+                    email,
+                    pass,
+                    phone_num,
+                    dept,
+                    TAs_Req,
+                    courses,
+                    image_url
+                });
+                await faculty.save();
+            } 
+            catch (err) 
+            {
+                console.error(err);
+                errs.push("Faculty could not be saved. (",err,")");
+                emailsErr.push(email);
+                continue;
+            }
+        }
+        res.send({message:"Faculties Added Successfully!",errs:errs,emailsErr:emailsErr})
+    }
+    else
+    {
+        res.status(403).send({success:0,message:"You are not allowed to add faculties!"})
     }
 
 })
@@ -687,13 +950,13 @@ app.post("/Set_choices",verify, (req,res) =>
             }
             else
             {
-                res.send({message:"Application Successful"})
+                res.send({success:1,message:"Application Successful!"})
             }
         })
     }
     else
     {
-        res.status(403).send({message:"You are not allowed to set TA-Ship choices!"})
+        res.status(403).send({success:0,message:"You are not allowed to set TA-Ship choices!"})
     }
 
 })
@@ -708,17 +971,17 @@ app.get("/fetch_TA_by_email", verify, (req,res) =>
         {
             if(err)
             {
-                res.send({message:"No TA available"})
+                res.send({success:0,message:"TA not found! Please try again later."});
             }
             else
             {
-                res.send(TA)
+                res.send({success:1,TA:TA});
             }
         })
     }
     else
     {
-        res.status(403).send({message:"You are not allowed to view TAs!"})
+        res.status(403).send({success:0,message:"You are not allowed to view TAs!"})
     }
 })
 
@@ -882,7 +1145,7 @@ app.post("/Map_TA_Faculty",verify, (req,res) =>
 
                     if(Existing_TAs.filter(email=>email!="").length + TA_Emails.filter(email=>email!="").length > 5)
                     {
-                        res.send({message: "A faculty can be assigned a maximum of 5 TAs"})
+                        res.send({success:0,message: "A faculty can be assigned a maximum of 5 TAs"})
                     }
                     else
                     {
@@ -911,20 +1174,19 @@ app.post("/Map_TA_Faculty",verify, (req,res) =>
                                     
                                     })     
                                 }
-                                res.send({message:"Allotment Successfull"})
+                                res.send({success:1,message:"Allotment Successfull"})
                             }
                         })
                     }
                 }
                 Mapper()
 
-
             }
         })
     }
     else
     {
-        res.status(403).send({message:"You are not allowed to map TAs and faculties!"})
+        res.status(403).send({success:0,message:"You are not allowed to map TAs and faculties!"})
     }
     
 
@@ -982,12 +1244,12 @@ app.put("/Update_Faculty_Profile", verify, (req,res) =>
                 image_url = req.body.faculty_image_url_new == "" ? faculty.image_url : req.body.faculty_image_url_new
                 new_email = req.body.Faculty_email_new
                 courses = req.body.courses ? req.body.courses : faculty.courses
-                query = new_email=="" ? {phone_num:phone_num} : {phone_num:phone_num,email:new_email} 
+                query = new_email=="" ? {phone_num:req.body.faculty_phone_num_new} : {phone_num:req.body.faculty_phone_num_new,email:new_email} 
                 FacultyModel.findOne(query, async (err,faculty) => 
                 {
                     if(faculty)
                     {
-                        res.send({message:"This phone number/email ID is already taken"})
+                        res.send({success:0,message:"This phone number/email ID is already taken"})
                     }
                     else
                     {
@@ -998,14 +1260,14 @@ app.put("/Update_Faculty_Profile", verify, (req,res) =>
                             {
                                 if(err)
                                 {
-                                    res.send("Error Occurred! Please try again later.");
+                                    res.send({success:0,message:"Error Occurred! Please try again later."});
                                 }
                             }) 
                             TaskModel.updateMany({Faculty_Email:email}, query3, (err,Task) =>
                             {
                                 if(err)
                                 {
-                                    res.send("Error Occurred! Please try again later.");
+                                    res.send({success:0,message:"Error Occurred! Please try again later."});
                                 }
                             }) 
                         }
@@ -1027,11 +1289,11 @@ app.put("/Update_Faculty_Profile", verify, (req,res) =>
                             if(err)
                             {
                                 console.log(err)
-                                res.send({message:err})
+                                res.send({success:0,message:"Error Occurred! Please try again later."})
                             }
                             else
                             {
-                                res.send({message:"Profile Updated Successfully."})
+                                res.send({success:1,message:"Profile Updated Successfully."})
                             }
                         })  
                     
@@ -1043,7 +1305,7 @@ app.put("/Update_Faculty_Profile", verify, (req,res) =>
     }
     else
     {
-        res.status(403).send({message:"You are not allowed to edit faculties!"})
+        res.status(403).send({success:0,message:"You are not allowed to edit faculties!"})
     }
 })
 
@@ -1089,7 +1351,7 @@ app.put("/Update_Admin_Profile", verify, (req,res) =>
         {
             if(admin)
             {
-                res.send({message:"This phone number is already taken"})
+                res.send({success:0,message:"This phone number is already taken"})
             }
             else
             {
@@ -1109,11 +1371,11 @@ app.put("/Update_Admin_Profile", verify, (req,res) =>
                     if(err)
                     {
                         console.log(err)
-                        res.send({message:err})
+                        res.send({success:0,message:"Error Occurred! Please try again later."})
                     }
                     else
                     {
-                        res.send({message:"Profile Updated Successfully."})
+                        res.send({success:1,message:"Profile Updated Successfully."})
                     }
                 })        
             }
@@ -1121,7 +1383,7 @@ app.put("/Update_Admin_Profile", verify, (req,res) =>
     }
     else
     {
-        res.status(403).send({message:"You are not allowed to edit admins!"})
+        res.status(403).send({success:0,message:"You are not allowed to edit admins!"})
     }
 })
 
@@ -1159,7 +1421,7 @@ app.post("/Assign_Task", verify, (req,res) =>
 {
     if(req.user.type=="Faculty") 
     {
-        const Name=req.body.Task_Name
+        const Name=req.body.Name
         const Description=req.body.Description ? req.body.Description : "None"
         const Deadline =req.body.Deadline
         const TA_Emails=req.body.TA_Emails
@@ -1178,15 +1440,15 @@ app.post("/Assign_Task", verify, (req,res) =>
 
         const Temp_Task =
         {
-            Name: Name,
-            Description: Description,
-            Deadline : Deadline,
-            Status : Status,
-            Rating : Rating,
-            Comments : Comments,
-            TA_Emails : TA_Emails,
-            Faculty_Email : Faculty_Email,
-            Course_Code : Course_Code,
+            Name,
+            Description,
+            Deadline,
+            Status,
+            Rating,
+            Comments,
+            TA_Emails,
+            Faculty_Email,
+            Course_Code
         }
         const Task = new TaskModel(Temp_Task)
 
@@ -1194,17 +1456,18 @@ app.post("/Assign_Task", verify, (req,res) =>
         {
             if(err)
             {
-                console.log(err)
+                console.log(err);
+                res.send({success:0,message:"Error Occurred! Please try again later."})
             }
             else
             {
-                res.send({message:"Task Assigned Successfully"})
+                res.send({success:1,message:"Task Assigned Successfully!"})
             }
         })
     }
     else
     {
-        res.status(403).send({message:"You are not allowed to assign tasks!"})
+        res.status(403).send({success:0,message:"You are not allowed to assign tasks!"})
     }
 
 
@@ -1317,11 +1580,11 @@ app.post("/Reassign_TAs", verify, (req,res) =>
                 {
                     if(err)
                     {
-                        res.send("Error Occurred! Please try again later.");
+                        console.log(err);
                     }
                     else
                     {
-                        res.send("TA Re-Assignment Successfull!")
+                        res.send({success:1,message:"TA Re-Assignment Successfull!"});
                     }
                 })
 
@@ -1330,7 +1593,7 @@ app.post("/Reassign_TAs", verify, (req,res) =>
     }
     else
     {
-        res.status(403).send({message:"You are not allowed to re-assign TAs!"})
+        res.status(403).send({success:0,message:"You are not allowed to re-assign TAs!"})
     }
 
     
@@ -1371,11 +1634,11 @@ app.post("/Remove_ta_from_task", verify, (req,res) =>
                 {
                     if(err)
                     {
-                        res.send("Error Occurred! Please try again later.");
+                        console.log(err);
                     }
                     else
                     {
-                        res.send("TA Removed Successfully!")
+                        res.send({success:1,message:"TA Removed Successfully!"});
                     }
                 })
 
@@ -1384,7 +1647,7 @@ app.post("/Remove_ta_from_task", verify, (req,res) =>
     }
     else
     {
-        res.status(403).send({message:"You are not allowed to remove TAs from tasks!"})
+        res.status(403).send({success:0,message:"You are not allowed to remove TAs from tasks!"})
     }
     
    
@@ -1460,7 +1723,7 @@ app.get("/fetch_incomplete_task_id", verify, (req,res) =>
     if(req.user) 
     {
         const id=req.query.id
-        TaskModel.findOne({_id:id}, (err,task) =>
+        TaskModel.findOne({_id:id,}, (err,task) =>
         {
             if(task)
             {
@@ -1486,15 +1749,15 @@ app.put("/Update_Task_Status", verify, (req,res) =>
 {
     if(req.user.type=="TA") 
     {
-        const status=req.body.Status
-        const id=req.body.id
-        const index=req.body.index
-
+        const status=req.body.Status;
+        const id=req.body.id;
+        const index=req.body.index;
         TaskModel.findOne({_id:id}, (err,task) =>
         {
             if(err)
             {
-                console.log(err)
+                console.log(err);
+                res.send({success:0,message:"Task not found! Please try again later."});
             }
             else
             {
@@ -1503,11 +1766,11 @@ app.put("/Update_Task_Status", verify, (req,res) =>
                 {
                     if(err)
                     {
-                        console.log(err)
+                        console.log(err);
                     }
                     else
                     {
-                        res.send({message:"Task Status Updated Successfully"})
+                        res.send({success:1,message:"Task Status Updated Successfully!"});
                     }
                 })
 
@@ -1517,7 +1780,7 @@ app.put("/Update_Task_Status", verify, (req,res) =>
     }
     else
     {
-        res.status(403).send({message:"You are not allowed to change task status!"})
+        res.status(403).send({success:0,message:"You are not allowed to change task status!"})
     }
 
 })
@@ -1564,7 +1827,8 @@ app.post("/Edit_Task_Faculty", verify, (req,res) =>
         {
             if(err)
             {
-                console.log(err)
+                console.log(err);
+                res.send({success:0,message:"Task Not Found! Please try again later."})
             }
             else
             {
@@ -1585,7 +1849,7 @@ app.post("/Edit_Task_Faculty", verify, (req,res) =>
                     }
                     else
                     {
-                        res.send({message:"Task Updated Successfully"})
+                        res.send({success:1,message:"Task Updated Successfully!"})
                     }
                 })
 
@@ -1595,7 +1859,7 @@ app.post("/Edit_Task_Faculty", verify, (req,res) =>
     }
     else
     {
-        res.status(403).send({message:"You are not allowed to edit tasks!"})
+        res.status(403).send({success:0,message:"You are not allowed to edit tasks!"})
     }
 
 })
@@ -1729,7 +1993,7 @@ app.delete("/Delete_TAs", verify, (req,res) =>
         }
 
         //Deleting TAs
-        TAModel.deleteMany({_id : {$in : req.query.ids}}, (err) => 
+        TAModel.deleteMany({_id : {$in : req.query.ids.split(",")}}, (err) => 
         {
           if(err) 
           {
@@ -1825,7 +2089,7 @@ app.put("/Update_TA_Profile", verify, (req,res) =>
                           {
                               if(err)
                               {
-                                  res.send("Error Occurred! Please try again later.");
+                                  console.log(err);
                               }
                           })
                         }
@@ -1853,28 +2117,27 @@ app.put("/Update_TA_Profile", verify, (req,res) =>
                                 {
                                     if(err)
                                     {
-                                        res.send("Error Occurred! Please try again later.");
+                                        console.log(err);
                                     }
                                 })
                             }
                         }
                     })      
-                
                 }
 
                 TAModel.findOne({$or : [{phone_num:req.body.TA_phone_num_new},{email:req.body.TA_email_new}]}, async (err,TA) => 
                 {
                     if(TA)
                     {
-                        res.send({message:"This phone number/email ID is already taken"})
+                        res.send({success:0,message:"This phone number/email ID is already taken"})
                     }
                     else
                     {
                         var query;
-                        if(req.body.ta_pass_new!="")
+                        if(req.body.TA_pass_new!="")
                         {
                             const salt = await bcrypt.genSalt(10);
-                            const securePassword = await bcrypt.hash(req.body.ta_pass_new, salt);
+                            const securePassword = await bcrypt.hash(req.body.TA_pass_new, salt);
                             query = { $set : {name:name,pass:securePassword,phone_num:phone_num,image_url:image_url,email:new_email}}
                         }
                         else
@@ -1886,11 +2149,11 @@ app.put("/Update_TA_Profile", verify, (req,res) =>
                             if(err)
                             {
                                 console.log(err)
-                                res.send({message:err})
+                                res.send({success:0,message:"Error Occurred! Please try again later."})
                             }
                             else
                             {
-                                res.send({message:"Profile Updated Successfully."})
+                                res.send({success:1,message:"Profile Updated Successfully!"})
                             }
                         })        
                     }
@@ -1898,13 +2161,14 @@ app.put("/Update_TA_Profile", verify, (req,res) =>
             }
             else
             {
-                console.log(err)
+                console.log(err);
+                res.send({success:0,message:"TA not found! Could not save changes."})
             }
         })  
     }
     else
     {
-        res.status(403).send({message:"You are not allowed to edit TAs!"})
+        res.status(403).send({success:0,message:"You are not allowed to edit TAs!"})
     } 
 })
 
@@ -1995,8 +2259,8 @@ app.delete("/Delete_Faculties", verify, (req,res) =>
 
     if(req.user.type=="Admin") 
     {
-        const Faculty_Emails = req.query.emails
-        const TA_Emails = [...new Set(req.query.TA_Emails)] 
+        const Faculty_Emails = req.query.emails.split(",")
+        const TA_Emails = [...new Set(req.query.TA_Emails.split(","))] 
 
         //Updating TA Statuses
         const query = {$set : {Application_Status: "Yet to Apply", Faculty_Email:"",Final_Course_Code:"",course1:"",course2:"",course3:""}}
@@ -2096,8 +2360,8 @@ app.delete("/Delete_Courses", verify, (req,res) =>
 {
     if(req.user.type=="Admin") 
     {
-        const Courses_ids = req.query.ids;
-        const Course_Codes = req.query.codes;
+        const Courses_ids = req.query.ids.split(",");
+        const Course_Codes = req.query.codes.split(",");
         const TA_list = [];
         
         //Updating Faculty Statuses (TA_emails and courses)
@@ -2333,7 +2597,7 @@ app.put("/Update_Course_Details", verify, (req,res) =>
                 {
                     if(course)
                     {
-                        res.send({message:"This course code is already taken"})
+                        res.send({success:0,message:"This course code is already taken"});
                     }
                     else
                     {
@@ -2343,35 +2607,35 @@ app.put("/Update_Course_Details", verify, (req,res) =>
                             {
                                 if(err)
                                 {
-                                    res.send("Error Occurred! Please try again later.");
+                                    res.send({success:0,message:"Error Occurred! Please try again later."});
                                 }
                             }) 
                             TAModel.updateMany({course1:code}, {$set:{course1:new_course_code}}, (err,TA) =>
                             {
                                 if(err)
                                 {
-                                    res.send("Error Occurred! Please try again later.");
+                                    res.send({success:0,message:"Error Occurred! Please try again later."});
                                 }
                             }) 
                             TAModel.updateMany({course2:code}, {$set:{course2:new_course_code}}, (err,TA) =>
                             {
                                 if(err)
                                 {
-                                    res.send("Error Occurred! Please try again later.");
+                                    res.send({success:0,message:"Error Occurred! Please try again later."});
                                 }
                             }) 
                             TAModel.updateMany({course3:code}, {$set:{course3:new_course_code}}, (err,TA) =>
                             {
                                 if(err)
                                 {
-                                    res.send("Error Occurred! Please try again later.");
+                                    res.send({success:0,message:"Error Occurred! Please try again later."});
                                 }
                             }) 
                             TaskModel.updateMany({Course_Code:code}, {$set:{Course_Code:new_course_code}}, (err,Task) =>
                             {
                                 if(err)
                                 {
-                                    res.send("Error Occurred! Please try again later.");
+                                    res.send({success:0,message:"Error Occurred! Please try again later."});
                                 }
                             }) 
                             FacultyModel.find({courses: {$in : code}}, (err, faculties) =>
@@ -2392,7 +2656,7 @@ app.put("/Update_Course_Details", verify, (req,res) =>
                                         {
                                             if(err)
                                             {
-                                                res.send("Error Occurred! Please try again later.");
+                                                res.send({success:0,message:"Error Occurred! Please try again later."});
                                             }
                                         })
                                     }
@@ -2406,11 +2670,11 @@ app.put("/Update_Course_Details", verify, (req,res) =>
                             if(err)
                             {
                                 console.log(err)
-                                res.send({message:err})
+                                res.send({success:0,message:"Error Occurred! Course could not be updated!"})
                             }
                             else
                             {
-                                res.send({message:"Course Updated Successfully."})
+                                res.send({success:1,message:"Course Updated Successfully."})
                             }
                         })  
                     
@@ -2421,11 +2685,12 @@ app.put("/Update_Course_Details", verify, (req,res) =>
             else
             {
                 console.log("Error:",err);
+                res.send({success:0,message:"Course Not Found and hence could not be updated!"})
             }
         })
     }
     else
     {
-        res.status(403).send({message:"Error Occurred! Please try again later."})
+        res.status(403).send({success:0,message:"Error Occurred! Please try again later."})
     }
 })  

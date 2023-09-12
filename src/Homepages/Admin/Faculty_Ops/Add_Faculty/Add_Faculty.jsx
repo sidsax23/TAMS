@@ -1,22 +1,21 @@
 import React,{useEffect, useState} from 'react'
 import Header from '../../../../Header/header.jsx'
 import './Add_Faculty.css'
-import axios from 'axios'
-import {Admin} from '../../../../Classes/Users.tsx'
+import Popup from 'reactjs-popup' 
+import { CircularProgress } from '@mui/material';
 import Papa from 'papaparse'
 import { Link } from 'react-router-dom'
 import { useContext } from 'react';
 import {userContext} from '../../../../App.jsx'
+import axios from 'axios';
 
 const Add_Faculty = (props) => 
 {
 
-    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+        const [userEmail,userType] = useContext(userContext);
    
-        const [Message,setmessage] = useState("")
-        const [show,setshow] = useState(false)
+  
         const [courses,set_courses] = useState("")
-        const [Message2,setmessage2] = useState("")
         const [bulk_email_flag,set_bulk_email_flag] = useState(false)
         const [bulk_phone_num_flag,set_bulk_phone_num_flag] = useState(false)
         const [bulk_tas_req_flag,set_bulk_tas_req_flag] = useState(false)
@@ -25,12 +24,18 @@ const Add_Faculty = (props) =>
         const [duplicate_course_code_flag,set_duplicate_course_code_flag] = useState(false)
         const [missing_password_flag,set_missing_password_flag] = useState(false)
 
-        const [no_file_flag,set_no_file_flag] = useState(false)
+        const [no_file_flag,set_no_file_flag] = useState(true)
         const [faculty_count,set_faculty_count] = useState(0)
 
+        //Loading Screen
+        const [loadingPopup,setLoadingPopup] = useState(false);
+        //Popup
+        const [popup,setPopup] = useState(false);
+        const [success,setSuccess] = useState(0);
+        const [popupMessage,setPopupMessage] = useState(null);
 
         var arr=[]
-        const [course_codes,set_course_codes] = useState([])
+        const [courseCodes,set_course_codes] = useState([])
         //Regex for checking phone number validity
         const pattern= new RegExp("[6-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]")
         const [bulk_data,set_bulk_data] = useState("")
@@ -46,24 +51,27 @@ const Add_Faculty = (props) =>
 
         })
 
+        const fetch_courses = async () =>
+        {
+            setLoadingPopup(true);
+            await axios.get("http://localhost:9000/fetch_courses", { withCredentials: true }).then(res=>
+            {
+                set_courses(res.data.courses);
+                const courseCodesReceived = res.data.courses.map(course => course.code);
+                set_course_codes(courseCodesReceived);
+                setLoadingPopup(false);
+            })
+
+        }
+        
         useEffect(() => 
         {
-            const fetch_courses = async () =>
-            {
-                const result= await axiosJWT.get("http://localhost:9000/fetch_courses", {headers:{'authorization':"Bearer "+userAccessToken}})
-                set_courses(result)
-                set_course_codes(result.data.map(({ code }) => code))
-            }
-            fetch_courses();
-            
-        
+            fetch_courses(); 
         },[])
 
         const HandleChange  = e =>  /*When someone types, its an 'event', denoted and saved in 'e' here. e.target will return where and what the change was*/
         {    
-            setshow(false)
-            setmessage("")
-            const {name,value} = e.target
+            const {name,value} = e.target;
             if(Number(name))
             {
                 Faculty_temp.courses[name-1]=value
@@ -89,47 +97,54 @@ const Add_Faculty = (props) =>
             arr=[]
             for(var i=1;i<=Faculty_temp.course_num;i++)
             {
-                arr[i-1]=i
+                arr[i-1]=i;
             }
         }
         function Course_Remover()
         {
             for(var i=Faculty_temp.course_num;i<5;i++)
             {
-                Faculty_temp.courses[i]=""
+                Faculty_temp.courses[i]="";
             }
         }
 
 
         const Save_Changes = async() =>
         {
-            setshow(true)
             if(!Faculty_temp.name)
             {
-                setmessage("Please enter the faculty's name")
+                setPopupMessage("Please enter the faculty's name");
+                setPopup(true);
             } 
             else if(!Faculty_temp.email)
             {
-                setmessage("Please enter the faculty's Email ID")
+                setPopupMessage("Please enter the faculty's Email ID");
+                setPopup(true);
             }
             else if(!Faculty_temp.email.endsWith("@pilani.bits-pilani.ac.in"))
             {
-                setmessage("Please enter a valid BITS Email ID")
+               setPopupMessage("Please enter a valid BITS Email ID");
+               setPopup(true);
+
             }
             else if(!Faculty_temp.pass)
             {
-                setmessage("Please enter the faculty's password")
+                setPopupMessage("Please enter the faculty's password");
+                setPopup(true);
             } 
             else if(!Faculty_temp.contact_num)
             {
-                setmessage("Please enter the faculty's contact number")
+                setPopupMessage("Please enter the faculty's contact number");
+                setPopup(true);
             }
             else if(!pattern.test(Faculty_temp.contact_num))
             {
-                setmessage("Please enter a valid contact number")
+                setPopupMessage("Please enter a valid contact number");
+                setPopup(true);
             }
             else 
             {
+                setLoadingPopup(true);
                 var all_courses_flag=0;
                 var duplicate_courses_flag=0;  
                 for(var i=0;i<Faculty_temp.course_num;i++)
@@ -145,16 +160,20 @@ const Add_Faculty = (props) =>
                 }
                 if(all_courses_flag==1)
                 {
-                    setmessage("Please enter all courses")
+                    setLoadingPopup(false);
+                    setPopupMessage("Please enter all courses");
+                    setPopup(true);
+
                 }
                 else if(duplicate_courses_flag==1)
                 {  
-                    setmessage("Courses must be different")
+                    setLoadingPopup(false);
+                    setPopupMessage("Courses must be different");
+                    setPopup(true);
 
                 }
                 else
                 {
-                   
                     const faculty = {
                         Name:Faculty_temp.name,
                         Email:Faculty_temp.email,
@@ -167,8 +186,22 @@ const Add_Faculty = (props) =>
                         Image_URL:Faculty_temp.image_url
 
                     }
-                    const response = await axiosJWT.post("http://localhost:9000/Add_Faculty", faculty, {headers:{'authorization':"Bearer "+userAccessToken}})
-                    setmessage(response.data.message)  
+                    await axios.post("http://localhost:9000/Add_Faculty", faculty, { withCredentials: true }).then(res=>
+                    {
+                        setLoadingPopup(false);
+                        setPopupMessage(res.data.message);
+                        setSuccess(res.data.success);
+                        setPopup(true);
+                        Faculty_temp.name="";
+                        Faculty_temp.email="";
+                        Faculty_temp.pass="";
+                        Faculty_temp.contact_num="";
+                        Faculty_temp.course_num=1;
+                        Faculty_temp.courses=[""];
+                        Faculty_temp.image_url="";
+
+                    })
+
 
                 }
             }
@@ -176,16 +209,15 @@ const Add_Faculty = (props) =>
 
         const ChangeHandler = (e) =>
         {
-            setshow(true)
             // Passing file data (e.target.files[0]) to parse using Papa.parse
-            set_bulk_email_flag(false)
-            set_bulk_phone_num_flag(false)
-            set_bulk_tas_req_flag(false)
-            set_bulk_course_codes_flag(false)
-            set_duplicate_email_flag(false)
-            set_missing_password_flag(false)
-            set_duplicate_course_code_flag(false)
-            set_no_file_flag(false)
+            set_bulk_email_flag(false);
+            set_bulk_phone_num_flag(false);
+            set_bulk_tas_req_flag(false);
+            set_bulk_course_codes_flag(false);
+            set_duplicate_email_flag(false);
+            set_missing_password_flag(false);
+            set_duplicate_course_code_flag(false);
+            set_no_file_flag(false);
             try 
             {
                 Papa.parse(e.target.files[0], 
@@ -212,43 +244,50 @@ const Add_Faculty = (props) =>
                             {
                                 if(!row_values[i][1].endsWith("@pilani.bits-pilani.ac.in"))
                                 {
-                                    set_bulk_email_flag(true)
-                                    setmessage2("Invalid/Missing BITS email found. Please try again!")
+                                    set_bulk_email_flag(true);
+                                    setPopupMessage("Invalid/Missing BITS email found. Please try again!");
+                                    setPopup(true);
                                     break;
                                 }
                                 if(!pattern.test(row_values[i][3]))
                                 {
-                                    set_bulk_phone_num_flag(true)
-                                    setmessage2("Invalid/Missing contact number found. Please try again!")
+                                    set_bulk_phone_num_flag(true);
+                                    setPopupMessage("Invalid/Missing contact number found. Please try again!");
+                                    setPopup(true);
                                     break;
                                 }
                                 if(row_values[i][4]&&(row_values[i][4]<-1||isNaN(row_values[i][4])))
                                 {
-                                    set_bulk_tas_req_flag(true)
-                                    setmessage2("Invalid TA Requirement found. Please try again!")
+                                    set_bulk_tas_req_flag(true);
+                                    setPopupMessage("Invalid TA Requirement found. Please try again!");
+                                    setPopup(true);
                                     break;
                                 }
-                                if(row_values[i][5]&&!course_codes.includes(row_values[i][5])||row_values[i][6]&&!course_codes.includes(row_values[i][6])||row_values[i][7]&&!course_codes.includes(row_values[i][7])||row_values[i][8]&&!course_codes.includes(row_values[i][8])||row_values[i][9]&&!course_codes.includes(row_values[i][9]))
+                                if(row_values[i][5]&&!courseCodes.includes(row_values[i][5])||row_values[i][6]&&!courseCodes.includes(row_values[i][6])||row_values[i][7]&&!courseCodes.includes(row_values[i][7])||row_values[i][8]&&!courseCodes.includes(row_values[i][8])||row_values[i][9]&&!courseCodes.includes(row_values[i][9]))
                                 {
-                                    set_bulk_course_codes_flag(true)
-                                    setmessage2("Invalid Course Code(s) found. Please try again!")
+                                    set_bulk_course_codes_flag(true);
+                                    setPopupMessage("Invalid Course Code(s) found. Please try again!");
+                                    setPopup(true);
                                     break;
                                 }
                                 if(!row_values[i][2])
                                 {
-                                    set_missing_password_flag(true)
-                                    setmessage2("One/more faculties is/are missing their password.")
+                                    set_missing_password_flag(true);
+                                    setPopupMessage("One/more faculties is/are missing their password.");
+                                    setPopup(true);
                                     break;
                                 }
                                 for(var j=5;j<10;j++)
                                 {
-                                    course_codes.push(row_values[i][j])
+                                    if(row_values[i][j]!="")
+                                        course_codes.push(row_values[i][j]);
                                 }
                                 var unique_course_codes = new Set(course_codes)
                                 if(unique_course_codes.size!=course_codes.length)
                                 {
-                                    set_duplicate_course_code_flag(true)
-                                    setmessage2("One/more faculties have duplicate course codes among the list of courses offered by them. Please try again.")
+                                    set_duplicate_course_code_flag(true);
+                                    setPopupMessage("One/more faculties have duplicate course codes among the list of courses offered by them. Please try again.");
+                                    setPopup(true);
                                 }
 
                                 emails.push(row_values[i][1])
@@ -257,14 +296,16 @@ const Add_Faculty = (props) =>
                             var unique_emails = new Set(emails)
                             if(unique_emails.size!=emails.length)
                             {
-                                set_duplicate_email_flag(true)
-                                setmessage2("Duplicate emails found. Please try again.")
+                                set_duplicate_email_flag(true);
+                                setPopupMessage("Duplicate emails found. Please try again.");
+                                setPopup(true);
                             }
-                            set_bulk_data(row_values)
+                            set_bulk_data(row_values);
                         }
                         else
                         {
-                            setmessage2("Incorrect format found in the uploaded file. Please try again!")
+                            setPopupMessage("Incorrect format found in the uploaded file. Please try again!");
+                            setPopup(true);
                         }     
                     },
                 });
@@ -272,7 +313,7 @@ const Add_Faculty = (props) =>
             } 
             catch (error) 
             {
-                set_no_file_flag(true)
+                set_no_file_flag(true);
             }
             
         }
@@ -280,34 +321,50 @@ const Add_Faculty = (props) =>
         
         const Bulk_Upload = async() => 
         {
-            setshow(true)
+            setLoadingPopup(true);
             if(bulk_phone_num_flag==false&&bulk_email_flag==false&&bulk_tas_req_flag==false&&bulk_course_codes_flag==false&&no_file_flag==false&&missing_password_flag==false&&duplicate_email_flag==false&&duplicate_course_code_flag==false)
             {
+                const faculty = {
+                    Names:[],
+                    Emails:[],
+                    Types:[],
+                    Passes:[],
+                    Contact_Nums:[],
+                    TAs_Required:[],
+                    Depts:[],
+                    Courses:[]
+
+                }
                 for(var i=0;i<faculty_count;i++)
                 {
                     const Courses = [bulk_data[i][5],bulk_data[i][6],bulk_data[i][7],bulk_data[i][8],bulk_data[i][9]]
-                    const faculty = {
-                        Name:bulk_data[i][0],
-                        Email:bulk_data[i][1],
-                        Type:"Faculty",
-                        Pass:bulk_data[i][2],
-                        Contact_Num:Number(bulk_data[i][3]),
-                        TAs_Required:bulk_data[i][4],
-                        Dept:"CSIS",
-                        Courses:Courses,
+                    faculty.Names.push(bulk_data[i][0]);
+                    faculty.Emails.push(bulk_data[i][1]);
+                    faculty.Types.push("Faculty");
+                    faculty.Passes.push(bulk_data[i][2]);
+                    faculty.Contact_Nums.push(Number(bulk_data[i][3]));
+                    faculty.TAs_Required.push(bulk_data[i][4]);
+                    faculty.Depts.push("CSIS");
+                    faculty.Courses.push(Courses);
+                }
+                
+                await axios.post("http://localhost:9000/Add_Faculty_in_Bulk", faculty, { withCredentials: true }).then(res=>
+                {
 
-                    }
-                    const response = await axiosJWT.post("http://localhost:9000/Add_Faculty", faculty, {headers:{'authorization':"Bearer "+userAccessToken}})
-                    if(response.data.message!="Faculty Successfully Added")
-                    {
-                        console.log("Faculty (with Email ID ",bulk_data[i][1],") could not be uploaded. Error : ",response)
-                    }
-                    setmessage2("Faculties Successfully Added!")
-                }      
+                    for(var i=0;i<res.data.errs.length;i++)
+                        console.log("Faculty (with Email ID ",res.data.emailsErr[i],") could not be uploaded. Error : ",res.data.errs[i]);
+                    setLoadingPopup(false);
+                    setSuccess(1);
+                    setPopupMessage("Faculties Successfully Added!");
+                    setPopup(true);
+                })  
+                  
             }
             else
             {
-                setmessage2("Please upload an appropriate file")
+                setLoadingPopup(false);
+                setPopupMessage("Please upload an appropriate file");
+                setPopup(true);
             }
         }
         
@@ -323,8 +380,6 @@ const Add_Faculty = (props) =>
 		            Upload File (CSV only) : &emsp;<input type="file" accept="*.csv" onChange={ChangeHandler} />
                     <br/>
                     <br/>    
-                    <div className="ErrorMsg">{show && Message2!=="Faculties Successfully Added!" ? Message2 : ""}</div>
-                    <div className="SuccessMsg">{show && Message2=="Faculties Successfully Added!" ? Message2 : ""}</div>
                     <div className='btn' onClick={Bulk_Upload}>Upload</div>
                     <br/>
                     <br/>
@@ -360,7 +415,7 @@ const Add_Faculty = (props) =>
                                                     <select name={el} className='details_input' onChange={HandleChange}>
                                                         <option value=""></option>
                                                         {
-                                                            courses && courses.data.map((el) => 
+                                                            courses && courses.map((el) => 
                                                             (
                                                                 <option value={el.code}>{el.name}</option>
                                                             ))
@@ -372,13 +427,33 @@ const Add_Faculty = (props) =>
                         }
                         <br/>
                     </div>
-                    <div className="ErrorMsg">{show && Message!=="Faculty Successfully Added" ? Message : ""}</div>
-                    <div className="SuccessMsg">{show && Message=="Faculty Successfully Added" ? Message : ""}</div>
                     <div className='btn' onClick={Save_Changes}>ADD</div>
                     <br/>
                     <br/>
                     </center>
               </div>
+
+               {/* LOADING SCREEN */}
+               <Popup open={loadingPopup} hideBackdrop closeOnDocumentClick={false} onClose={()=>{setLoadingPopup(false)}}>
+                     <center>
+                       <p style={{color:"#003C71", fontSize:"130%", margin:"3%"}}><center>PLEASE WAIT...</center></p>
+                       <br/>
+                       <CircularProgress/>
+                       <br/>
+                       <br/>
+                     </center>
+                </Popup> 
+
+                <Popup open = {popup} closeOnDocumentClick  onClose={()=>{setPopup(false);setSuccess(0);}}>
+                <center> 
+                    <br/>
+                    <center><div className={success==1 ? 'SuccessMsg' : 'ErrorMsg'}>{popupMessage}</div></center>
+                    <br/>
+                    <div className='export_btn' onClick={()=>{setPopup(false);setSuccess(0);}}>Ok</div>
+                    <br/>
+                    <br/>
+                  </center>
+                </Popup>
             </div>
         )
         

@@ -3,14 +3,18 @@ import Header from '../../../../Header/header.jsx'
 import './Faculty_Page.css'
 import { useLocation } from 'react-router-dom'
 import { useContext } from 'react';
+import Popup from 'reactjs-popup'
+import { CircularProgress } from '@mui/material'
 import {userContext} from '../../../../App.jsx'
+import axios from 'axios';
 
 const Faculty_Page = (props) => 
 {
-    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
-   
     const location=useLocation()
     const faculty = location.state.faculty
+
+    const [userEmail,userType] = useContext(userContext);
+   
     const [TA_requests,set_TA_requests] = useState("")
     const [TAs,set_TAs] = useState()
     var arr=[]
@@ -18,9 +22,10 @@ const Faculty_Page = (props) =>
     const TA_pattern = new RegExp("TA[0-9]")
     const Course_pattern = new RegExp("C[0-9]")
 
+    /* The JWT refresh token update is not reflected in the '.then' block of the previous request where the refresh token was updated, 
+    so this variable stores if update is needed and calls the fetch_details function when needed */
+    const [update,setUpdate] = useState(0)
 
-    const [Message,setmessage] = useState("")
-    const [show,setshow] = useState(false)
     const [TAs_Temp,set_TAs_Temp] = useState(
       {
         TA_num:0,
@@ -29,37 +34,46 @@ const Faculty_Page = (props) =>
         Courses:[""]
         
       })
+      
+    //Loading Screen
+    const [loadingPopup,setLoadingPopup] = useState(false)
 
+    //Popup
+    const [popup,setPopup] = useState(false);
+    const [success,setSuccess] = useState(0);
+    const [popupMessage,setPopupMessage] = useState(null);
     
+    const fetch_TA_requests = async () =>
+    {
+        const result = await axios.get(`http://localhost:9000/fetch_TA_requests?courses=${faculty.courses}`, { withCredentials: true })
+        set_TA_requests(result)
+    }
+    const fetch_TAs = async () =>
+    {
+        const result2 = await axios.get("http://localhost:9000/fetch_TAs", { withCredentials: true })
+        set_TAs(result2)
+        setUpdate(0);
+    }
+
     useEffect(() => 
     {
-        const fetch_TA_requests = async () =>
-        {
-            const result = await axiosJWT.get(`http://localhost:9000/fetch_TA_requests?courses=${faculty.courses}`, {headers:{'authorization':"Bearer "+userAccessToken}})
-            set_TA_requests(result)
-        }
-        fetch_TA_requests()
-        const fetch_TAs = async () =>
-        {
-            const result2 = await axiosJWT.get("http://localhost:9000/fetch_TAs", {headers:{'authorization':"Bearer "+userAccessToken}})
-            set_TAs(result2)
-        }
-        fetch_TAs()
-
-
-
-    },[]) 
-
+        fetch_TA_requests();
+        fetch_TAs();
+    },[])
     
-
+    useEffect(() =>
+    {
+        if(update==1)
+        {
+          fetch_TA_requests();
+          fetch_TAs();
+        }
+    },[update])
 
     //Saving user input
     const HandleChange  = e =>  /*When someone types, its an 'event', denoted and saved in 'e' here. e.target will return where and what the change was*/
     {    
-        setshow(false)
-        setmessage("")
         const {name,value} = e.target
-
         if(TA_pattern.test(name))
         {
             TAs_Temp.TA_Emails[name[2]-1]=value
@@ -75,11 +89,9 @@ const Faculty_Page = (props) =>
                 [name]:value /* Depending on the name of the inputbar, its value is stored in the respective state variable*/
             })
         }
-            
-    
         if(name=="TA_num")
         {
-            Arr2Setter()
+            Arr2Setter();
         }
 
     }
@@ -118,7 +130,6 @@ const Faculty_Page = (props) =>
 
     const Save_Changes = async() =>
     {
-        setshow(true)
         var all_TAs_flag=0;
         var all_courses_flag=0;
         var duplicate_TAs_flag=0;
@@ -138,18 +149,22 @@ const Faculty_Page = (props) =>
         }
         if(all_TAs_flag==1)
         {
-            setmessage("Please enter all TAs")
+            setPopupMessage("Please enter all TAs");
+            setPopup(true);
         }
         else if(all_courses_flag==1)
         {
-            setmessage("Please enter all courses")
+            setPopupMessage("Please enter all courses");
+            setPopup(true);
         }
         else if(duplicate_TAs_flag==1)
         {  
-            setmessage("TAs must be different")
+            setPopupMessage("TAs must be different");
+            setPopup(true);
         }
         else
         {
+            setLoadingPopup(true);
             TAs_Temp.Email=faculty.email
             const data = {
                 Email:TAs_Temp.Email,
@@ -157,14 +172,20 @@ const Faculty_Page = (props) =>
                 Course_Codes:TAs_Temp.Courses
 
             }
-            const response = await axiosJWT.post("http://localhost:9000/Map_TA_Faculty", data, {headers:{'authorization':"Bearer "+userAccessToken}})
-            setmessage(response.data.message)  
+            await axios.post("http://localhost:9000/Map_TA_Faculty", data, { withCredentials: true }).then(res=>
+            {
+                setLoadingPopup(false);
+                setSuccess(res.data.success);
+                setPopupMessage(res.data.message);
+                setPopup(true);
+                TAs_Temp.TA_num=0;
+                TAs_Temp.TA_Emails=[""];
+                TAs_Temp.Email = "";
+                TAs_Temp.Courses=[""];
+                setUpdate(1);  
+            })
         }
-        
     } 
-
-
-
 
     return (
         <div>
@@ -256,14 +277,31 @@ const Faculty_Page = (props) =>
                }
             <br/>
             </div>
-      
-            <div className="ErrorMsg">{show && Message!=="Allotment Successfull" ? Message : ""}</div>
-            <div className="SuccessMsg">{show && Message=="Allotment Successfull" ? Message : ""}</div>
             <div className={TAs_Temp.TA_num==0 ? 'ncbtn' : 'btn'} onClick={TAs_Temp.TA_num==0 ? null : Save_Changes}>ALLOT</div>
             <br/>
             <br/>
             </center>
       </div>
+       {/* LOADING SCREEN */}
+       <Popup open={loadingPopup} hideBackdrop closeOnDocumentClick={false} onClose={()=>{setLoadingPopup(false)}}>
+        <center>
+          <p style={{color:"#003C71", fontSize:"130%", margin:"3%"}}><center>PLEASE WAIT...</center></p>
+          <br/>
+          <CircularProgress/>
+          <br/>
+          <br/>
+        </center>
+        </Popup> 
+        <Popup open = {popup} closeOnDocumentClick  onClose={()=>{setPopup(false);setSuccess(0);}}>
+        <center> 
+            <br/>
+            <center><div className={success==1 ? 'SuccessMsg' : 'ErrorMsg'}>{popupMessage}</div></center>
+            <br/>
+            <div className='export_btn' onClick={()=>{setPopup(false);setSuccess(0)}}>Ok</div>
+            <br/>
+            <br/>
+          </center>
+        </Popup>
     </div>
 
     )

@@ -1,26 +1,23 @@
 import React from 'react'
 import './admin_profile_page.css'
 import Header from '../../../Header/header.jsx'
-import { useState } from 'react'
-import axios from 'axios'
+import { useState, useEffect } from 'react'
+import Popup from 'reactjs-popup'
+import { CircularProgress } from '@mui/material'
 import { useContext } from 'react';
 import {userContext} from '../../../App.jsx'
+import axios from 'axios';
 
 
 function Admin_Profile(props) 
 {
-  const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+    const [userEmail,userType] = useContext(userContext);
    
     const [admin_name,set_admin_name]=useState("")
     const [admin_dept,set_dept]=useState("")
-    const [dummy,set_dummy]=useState("")
     const [admin_image_url,set_image_url] = useState("")
     const [admin_phone_num,set_phone_num]=useState("")
     const [pass_copy,set_pass_copy] =useState("")
-
-    const [Message,setmessage] = useState("")
-    const [show,setshow] = useState(false)
-    const [update,set_update]=useState(false)
     const pattern = new RegExp("[6,7,8,9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]") 
 
     const [admin,Setadmin] = useState(
@@ -31,33 +28,44 @@ function Admin_Profile(props)
         admin_image_url_new:"",
         admin_pass_new:""
     })
-    const [axios_call_count,set_call_count]=useState(0)
 
-    if(axios_call_count==0||update==false)
+    /* The JWT refresh token update is not reflected in the '.then' block of the previous request where the refresh token was updated, 
+    so this variable stores if update is needed and calls the fetch_details function when needed */
+    const [update,setUpdate] = useState(0)
+
+    //Loading Screen
+    const [loadingPopup,setLoadingPopup] = useState(false);
+    //Popup
+    const [popup,setPopup] = useState(false);
+    const [success,setSuccess] = useState(0);
+    const [popupMessage,setPopupMessage] = useState(null);
+
+    const fetch_details = async() =>
     {
-      axiosJWT.post("http://localhost:9000/Admin_Profile",props, {headers:{'authorization':"Bearer "+userAccessToken}}).then(
-        res => {
-                  set_call_count(1)
-                  set_update(true)
-                  res.data.found ? Set_details(res) : set_dummy()
-               })
-
-       function Set_details(res)
-       {
-         set_admin_name(res.data.name)
-         set_phone_num(res.data.phone_num)
-         set_image_url(res.data.image_url)
-         set_dept(res.data.dept)
-       }
- 
+      await axios.post("http://localhost:9000/Admin_Profile",props, { withCredentials: true }).then(res => 
+      {
+        set_admin_name(res.data.name);
+        set_phone_num(res.data.phone_num);
+        set_image_url(res.data.image_url);
+        set_dept(res.data.dept);
+        setUpdate(0);
+      })
     }
 
-    
+    useEffect(() =>
+    {
+        fetch_details()
+    },[])
+
+    useEffect(() =>
+    {
+      if(update==1)
+        fetch_details();
+    },[update])
+
 
     const HandleChange  = e =>  /*When someone types, its an 'event', denoted and saved in 'e' here. e.target will return where and what the change was*/
     {    
-        setshow(false)
-        setmessage("")
         const {name,value} = e.target
         if(name=="pass_copy")
         {
@@ -74,38 +82,56 @@ function Admin_Profile(props)
 
     const Save_Changes = () =>
     {
-        set_update(false)
-        setshow(true)
         const {email,admin_name_new,admin_phone_num_new,admin_image_url_new,admin_pass_new} = admin
         admin.email=props.email
         if(!admin_name_new&&!admin_phone_num_new&&!admin_image_url_new&&!admin_pass_new)
         {
-            setmessage("Please enter new data")
+            setPopupMessage("Please enter new data");
+            setPopup(true);
         }
         else if(admin_name_new==admin_name&&admin_name_new)
         {
-            setmessage("Entered name matches the existing one.")
+            setPopupMessage("Entered name matches the existing one.");
+            setPopup(true);
         }
         else if(admin_phone_num_new==admin_phone_num&&admin_phone_num_new)
         {
-            setmessage("Entered phone number matches the existing one.")
+            setPopupMessage("Entered phone number matches the existing one.");
+            setPopup(true);
         }
         else if(admin_image_url==admin_image_url_new&&admin_image_url_new)
         {
-            setmessage("Entered image URL matches the existing one.")
+            setPopupMessage("Entered image URL matches the existing one.");
+            setPopup(true);
         }
         else if(!pattern.test(admin_phone_num_new)&&admin_phone_num_new)
         {
-            setmessage("Please enter a valid phone number")
+            setPopupMessage("Please enter a valid phone number");
+            setPopup(true);
         }
         else if(admin.admin_pass_new != pass_copy)
         {
-          setmessage("Please repeat the password correctly.")
+            setPopupMessage("Please repeat the password correctly.");
+            setPopup(true);
         }
         else
         {
-            axiosJWT.put("http://localhost:9000/Update_Admin_Profile", admin, {headers:{'authorization':"Bearer "+userAccessToken}})
-            .then( res=> {setmessage(res.data.message)} )
+          setLoadingPopup(true);
+          axios.put("http://localhost:9000/Update_Admin_Profile", admin, { withCredentials: true })
+          .then(res=> 
+            {
+              setLoadingPopup(false);
+              setSuccess(res.data.success);
+              setPopupMessage(res.data.message);
+              setPopup(true);
+              admin.email="";
+              admin.admin_name_new="";
+              admin.admin_phone_num_new="";
+              admin.admin_image_url_new="";
+              admin.admin_pass_new="";
+              set_pass_copy("");
+              setUpdate(1);
+            })
         }
 
     }
@@ -139,11 +165,29 @@ function Admin_Profile(props)
                   <br/>
                   <br/>
                 </div>
-                <div className="ErrorMsg">{show && Message!=="Profile Updated Successfully." ? Message : ""}</div>
-                <div className="SuccessMsg">{show && Message=="Profile Updated Successfully." ? Message : ""}</div>
                 <div className='btn' onClick={Save_Changes}>Save</div>
                 </center>
               </div>
+              {/* LOADING SCREEN */}
+              <Popup open={loadingPopup} hideBackdrop closeOnDocumentClick={false} onClose={()=>{setLoadingPopup(false)}}>
+                   <center>
+                     <p style={{color:"#003C71", fontSize:"130%", margin:"3%"}}><center>PLEASE WAIT...</center></p>
+                     <br/>
+                     <CircularProgress/>
+                     <br/>
+                     <br/>
+                   </center>
+              </Popup> 
+              <Popup open = {popup} closeOnDocumentClick  onClose={()=>{setPopup(false);setSuccess(0);}}>
+              <center> 
+                  <br/>
+                  <center><div className={success==1 ? 'SuccessMsg' : 'ErrorMsg'}>{popupMessage}</div></center>
+                  <br/>
+                  <div className='export_btn' onClick={()=>{setPopup(false);setSuccess(0)}}>Ok</div>
+                  <br/>
+                  <br/>
+                </center>
+              </Popup>
         </div>
   )
 }

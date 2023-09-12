@@ -7,63 +7,86 @@ import { Link } from 'react-router-dom'
 import axios from 'axios'
 import { CSVLink } from 'react-csv'
 import Popup from 'reactjs-popup'
+import { CircularProgress } from '@mui/material'
 import 'reactjs-popup/dist/index.css' 
 import { useContext } from 'react';
 import {userContext} from '../../../../App.jsx'
 
 const Edit_TA = (props) => {
   
-  const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+  const [userEmail,userType] = useContext(userContext);
    
+  const [tKey,setTKey] = useState(0);
+  
+  const [students,set_students] = useState([]);
+  const [selected_data,set_selected_data] = useState([]);
+  const [filtered_students,set_filtered_students] = useState([]);
+  const [search,set_search] = useState("");
+  const [updation_flag,set_updation_flag] = useState(0);
+  const [popup1,set_popup1] = useState(false);
+  const [popup2,set_popup2] = useState(false);
+  const [inner_popup1,set_inner_popup1] = useState(false);
+  const [inner_popup1_message,set_inner_popup1_message] = useState("");
+  const [inner_popup2,set_inner_popup2] = useState(false);
+  const [inner_popup2_message,set_inner_popup2_message] = useState("");
 
-  const [students,set_students] = useState([])
-  const [selected_data,set_selected_data] = useState([])
-  const [filtered_students,set_filtered_students] = useState([])
-  const [search,set_search] = useState("")
-  const [updation_flag,set_updation_flag] = useState(0)
-  const [popup1,set_popup1] = useState(false)
-  const [popup2,set_popup2] = useState(false)
-  const [inner_popup1,set_inner_popup1] = useState(false)
-  const [inner_popup1_message,set_inner_popup1_message] = useState("")
-  const [inner_popup2,set_inner_popup2] = useState(false)
-  const [inner_popup2_message,set_inner_popup2_message] = useState("")
+  //Loading Screen
+  const [loadingPopup,setLoadingPopup] = useState(false);
+
+  /* The JWT refresh token update is not reflected in the '.then' block of the previous request where the refresh token was updated, 
+  so this variable stores if update is needed and calls the fetch_details function when needed */
+  const [update,setUpdate] = useState(0);
 
   const get_students = async() =>
   {
     try 
     {
-      const response = await axiosJWT.get("http://localhost:9000/fetch_students", {headers:{'authorization':"Bearer "+userAccessToken}})
+      const response = await axios.get("http://localhost:9000/fetch_students", { withCredentials: true })
       set_students(response.data)
       set_filtered_students(response.data)
-      set_updation_flag(1)
+      set_updation_flag(1);
+      setUpdate(0);
     } 
     catch (error) 
     {
-      console.log(error)      
+      console.log(error);
+      setUpdate(0);
     }
-
   }
 
   if(updation_flag==1)
   {
-     set_faculty_names()
+     set_faculty_names();
   }
 
   async function set_faculty_names()
   {
+      var facultyEmails=[];
       for(var i=0;i<students.length;i++)
       {
-        const faculty = await axiosJWT.get(`http://localhost:9000/fetch_faculty_by_email?email=${students[i].Faculty_Email}`, {headers:{'authorization':"Bearer "+userAccessToken}}) 
-        students[i].faculty_name = faculty.data.name; 
+        facultyEmails.push(students[i].Faculty_Email)
       }
-      set_updation_flag(0)
+      await axios.get(`http://localhost:9000/fetch_faculties_by_email_array?facultyEmails=${facultyEmails}`, { withCredentials: true }).then(res=>
+      {
+        for(var i=0;i<students.length;i++)
+        {
+          students[i].faculty_name = res.data.names[i]; 
+        }
+        set_updation_flag(0);
+      })
+
   }
-  
 
   useEffect(() => 
   {
     get_students();   
   }, [])
+
+  useEffect(() =>
+  {
+    if(update==1)
+      get_students();
+  },[update])
 
   useEffect(() => 
   {
@@ -77,7 +100,6 @@ const Edit_TA = (props) => {
   },[search])
 
   
-
   //HEADERS FOR EXPORTING DATA
   const headers = [
     {
@@ -140,6 +162,7 @@ const Edit_TA = (props) => {
   //DELETION
   const delete_records = () =>
   {
+    setLoadingPopup(true);
     const TA_Details = {
       emails:[],
       ids:[],
@@ -152,19 +175,22 @@ const Edit_TA = (props) => {
       TA_Details.emails.push(selected_data[i].email)
     }
     
-    axiosJWT.delete(`http://localhost:9000/Delete_TAs?ids=${TA_Details.ids}&Faculty_Emails=${TA_Details.Faculty_Emails}&emails=${TA_Details.emails}`, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
+    axios.delete(`http://localhost:9000/Delete_TAs?ids=${TA_Details.ids}&Faculty_Emails=${TA_Details.Faculty_Emails}&emails=${TA_Details.emails}`, { withCredentials: true }).then( (res) =>
     {
 
-      set_inner_popup1_message(res.data)
-      set_popup1(false)
-      set_inner_popup1(true)
-      get_students()
+      set_inner_popup1_message(res.data);
+      set_popup1(false);
+      set_inner_popup1(true);
+      setUpdate(1);
+      setTKey(tKey+1);
+      setLoadingPopup(false);
     })
   }
 
    //Reset TA-Ship
    const reset_records = () =>
    {
+    setLoadingPopup(true);
      const TA_Details = {
        ids:[],
        Faculty_Emails:[],
@@ -177,12 +203,14 @@ const Edit_TA = (props) => {
        TA_Details.emails.push(selected_data[i].email)
      }
      
-     axiosJWT.put("http://localhost:9000/Reset_TA-Ship_TAs", TA_Details, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
+     axios.put("http://localhost:9000/Reset_TA-Ship_TAs", TA_Details, { withCredentials: true }).then( (res) =>
      {
-       set_inner_popup2_message(res.data)
-       set_popup2(false)
-       set_inner_popup2(true)
-       get_students()
+       set_inner_popup2_message(res.data);
+       set_popup2(false);
+       set_inner_popup2(true);
+       setUpdate(1);
+       setTKey(tKey+1);
+       setLoadingPopup(false);
      })
    }
 
@@ -235,6 +263,7 @@ const Edit_TA = (props) => {
           <h1>STUDENT LIST</h1>
           <br/>
           <DataTable 
+            key={tKey} //This is changed after every reset or deletion to ensure that the table is reset
             columns={columns} 
             data={filtered_students} 
             fixedHeader 
@@ -294,6 +323,16 @@ const Edit_TA = (props) => {
               <br/>
             </center>
           </Popup>
+          {/* LOADING SCREEN */}
+          <Popup open={loadingPopup} hideBackdrop closeOnDocumentClick={false} onClose={()=>{setLoadingPopup(false)}}>
+           <center>
+             <p style={{color:"#003C71", fontSize:"130%", margin:"3%"}}><center>PLEASE WAIT...</center></p>
+             <br/>
+             <CircularProgress/>
+             <br/>
+             <br/>
+           </center>
+          </Popup> 
           </center>
           <br/>
       </div>

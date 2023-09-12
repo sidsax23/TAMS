@@ -1,30 +1,26 @@
 import React, {useEffect,useState} from 'react'
 import Header from '../../../../Header/header.jsx'
 import './Edit_Task_Details.css'
-import { Link, useLocation } from 'react-router-dom'
-import axios from 'axios'
-import {Faculty} from '../../../../Classes/Users.tsx'
+import { useLocation } from 'react-router-dom'
+import Popup from 'reactjs-popup'
+import { CircularProgress } from '@mui/material'
 import { format, parseISO } from 'date-fns'
 import { useContext } from 'react';
 import {userContext} from '../../../../App.jsx'
+import axios from 'axios';
 
 const Edit_Task_Details = (props) => 
 {
-
-    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
-   
     const location=useLocation()
     const [task,set_task] = useState(location.state.Task)
     const [course,set_course] = useState(location.state.course)
+
+    const [userEmail,userType] = useContext(userContext);
+   
     const [TAs,set_TAs] = useState([""])
     const [Course_TAs,set_Course_TAs] = useState([""])
     const [RT, set_RT] = useState(0)
     const days = [ "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" ];
-    const [update,set_update]=useState(true)
-    const [show,set_show]=useState("")
-    const [Message,set_message]=useState("")
-    const [show2,set_show2]=useState("")
-    const [Message2,set_message2]=useState("")
     const [comments,set_comments] = useState([])
     var arr=[];
     var arr2=[];
@@ -33,6 +29,10 @@ const Edit_Task_Details = (props) =>
     const TA_pattern = new RegExp("TA[0-9]")
     const Rating_pattern = new RegExp("R[0-9]")
     const Comments_pattern = new RegExp("C[0-9]")
+
+    /* The JWT refresh token update is not reflected in the '.then' block of the previous request where the refresh token was updated, 
+    so this variable stores if update is needed and calls the fetch_details function when needed */
+    const [update,setUpdate] = useState(0)
 
     const [inputs,set_inputs] = useState({
 
@@ -48,30 +48,51 @@ const Edit_Task_Details = (props) =>
 
     })
 
+    //Loading Screen
+    const [loadingPopup,setLoadingPopup] = useState(false)
+    //Popup
+    const [popup,setPopup] = useState(false);
+    const [success,setSuccess] = useState(0);
+    const [popupMessage,setPopupMessage] = useState(null);
+
+    const fetch_TAs = async () =>
+    {
+       const result = await axios.get(`http://localhost:9000/fetch_TAs_email_array?emails=${task.TA_Emails}`, { withCredentials: true })
+       set_TAs(result.data)
+    }
+
+    const fetch_course_TAs = async () =>
+    {
+       const result2 = await axios.get(`http://localhost:9000/fetch_TAs_by_course_faculty?Faculty_Email=${props.email}&Course_Code=${location.state.course.code}`, { withCredentials: true })
+       set_Course_TAs(result2.data)
+    }
+    const fetch_task = async () =>
+    {
+        const result= await axios.get(`http://localhost:9000/fetch_task_id?id=${task._id}`, { withCredentials: true })
+        set_task(result.data)
+        setUpdate(0);
+    }
+
     useEffect(() => 
     {
-        const fetch_TAs = async () =>
-        {
-            const result = await axiosJWT.get(`http://localhost:9000/fetch_TAs_email_array?emails=${task.TA_Emails}`, {headers:{'authorization':"Bearer "+userAccessToken}})
-            set_TAs(result.data)
-        }
-        fetch_TAs()
-
-        const fetch_course_TAs = async () =>
-        {
-            const result2 = await axiosJWT.get(`http://localhost:9000/fetch_TAs_by_course_faculty?Faculty_Email=${props.email}&Course_Code=${location.state.course.code}`, {headers:{'authorization':"Bearer "+userAccessToken}})
-            set_Course_TAs(result2.data)
-        }
-        fetch_course_TAs()
-
+        fetch_TAs();
+        fetch_course_TAs();
+        fetch_task();
     },[]) 
+
+    useEffect(() =>
+    {
+      if(update==1)
+      {
+        fetch_TAs()
+        fetch_course_TAs()
+        fetch_task();
+      }
+    },[update])
 
 
     const HandleChange = e =>
     {
-        set_show(false)
-        set_show2(false)
-        set_message("")
         const {name,value} = e.target
         if(Rating_pattern.test(name))
         {
@@ -155,21 +176,9 @@ const Edit_Task_Details = (props) =>
     }
     
 
-    if(update==false)
-    {
-        const fetch_task = async () =>
-        {
-            const result= await axiosJWT.get(`http://localhost:9000/fetch_task_id?id=${task._id}`, {headers:{'authorization':"Bearer "+userAccessToken}})
-            set_task(result.data)
-            set_update(true)
-        }
-        fetch_task();
-        
-    }
-
     const Save_Changes = async() =>
     {      
-        set_show(true)
+        setLoadingPopup(true);
         const details = {
             ratings:inputs.Rating,
             comments:inputs.Comments,
@@ -178,36 +187,58 @@ const Edit_Task_Details = (props) =>
             description:Task_Temp.description,
             deadline:Task_Temp.deadline
         }
-        const response = await axiosJWT.post("http://localhost:9000/Edit_Task_Faculty", details, {headers:{'authorization':"Bearer "+userAccessToken}})
-        set_update(false)
-        set_message(response.data.message)  
+        await axios.post("http://localhost:9000/Edit_Task_Faculty", details, { withCredentials: true }).then(res=>
+        {
+            setLoadingPopup(false);
+            setSuccess(res.data.success);
+            setPopupMessage(res.data.message);
+            setPopup(true);
+            Task_Temp.name = task.Name;
+            Task_Temp.description = task.description;
+            Task_Temp.deadline = task.deadline;
+            Task_Temp.TAs_num = 1;
+            Task_Temp.TA_Emails=[""];
+            setUpdate(1);
+        })
+         
 
     }
 
     const Remove_TA = async(email) =>
     {
-        set_show(true)
+        setLoadingPopup(true);
         const details = {
             task_id:task._id,
             ta_email:email
         }
-        const response = await axiosJWT.post("http://localhost:9000/Remove_ta_from_task",details, {headers:{'authorization':"Bearer "+userAccessToken}})
-        set_update(false)
-        set_message(response.data) 
+        await axios.post("http://localhost:9000/Remove_ta_from_task",details, { withCredentials: true }).then(res=>
+        {
+            setLoadingPopup(false);
+            setSuccess(res.data.success);
+            setPopupMessage(res.data.message);
+            setPopup(true);
+            setUpdate(1);
+        })
+ 
 
     }
 
  
     const re_assign_tas = async() =>
     {
-        set_show2(true)
+        setLoadingPopup(true);
         const details = {
             task_id:task._id,
             TA_Emails:Task_Temp.TA_Emails
         }
-        const response = await axiosJWT.post("http://localhost:9000/Reassign_TAs",details, {headers:{'authorization':"Bearer "+userAccessToken}})
-        set_update(false)
-        set_message2(response.data) 
+        await axios.post("http://localhost:9000/Reassign_TAs",details, { withCredentials: true }).then(res=>
+        {
+            setLoadingPopup(false);
+            setSuccess(res.data.success);
+            setPopupMessage(res.data.message);
+            setPopup(true);
+            setUpdate(1);
+        }) 
 
     }
     
@@ -263,8 +294,6 @@ const Edit_Task_Details = (props) =>
                     ))
                   }
                   <center>
-                    <div className="ErrorMsg">{show && (Message!="Task Updated Successfully"&&Message!="TA Removed Successfully!") ? Message : ""}</div>
-                    <div className="SuccessMsg">{show && (Message=="Task Updated Successfully"||Message=="TA Removed Successfully!") ? Message : ""}</div>
                     <div className='btn' onClick={Save_Changes}>SAVE</div>
                   </center>
                   <br/>
@@ -320,8 +349,6 @@ const Edit_Task_Details = (props) =>
                         <br/>
                         <br/>
                         <center>
-                         <div className="ErrorMsg">{show2 && Message2!="TA Re-Assignment Successfull!" ? Message2 : ""}</div>
-                         <div className="SuccessMsg">{show2 && Message2=="TA Re-Assignment Successfull!" ? Message2 : ""}</div>
                          <div className='btn' onClick={re_assign_tas}>Re-Assign TAs</div>
                         </center>
                         </div>
@@ -335,6 +362,26 @@ const Edit_Task_Details = (props) =>
             <br/>
             </center>
         </div>
+        {/* LOADING SCREEN */}
+        <Popup open={loadingPopup} hideBackdrop closeOnDocumentClick={false} onClose={()=>{setLoadingPopup(false)}}>
+             <center>
+               <p style={{color:"#003C71", fontSize:"130%", margin:"3%"}}><center>PLEASE WAIT...</center></p>
+               <br/>
+               <CircularProgress/>
+               <br/>
+               <br/>
+             </center>
+        </Popup> 
+        <Popup open = {popup} closeOnDocumentClick  onClose={()=>{setPopup(false);setSuccess(0);}}>
+        <center> 
+            <br/>
+            <center><div className={success==1 ? 'SuccessMsg' : 'ErrorMsg'}>{popupMessage}</div></center>
+            <br/>
+            <div className='export_btn' onClick={()=>{setPopup(false);setSuccess(0)}}>Ok</div>
+            <br/>
+            <br/>
+          </center>
+        </Popup>
         </div>
     )
     

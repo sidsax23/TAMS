@@ -2,26 +2,26 @@ import React from 'react'
 import './Edit_Faculty_Details.css'
 import Header from '../../../../../Header/header.jsx'
 import { useLocation } from 'react-router-dom'
-import { useState, useEffect } from 'react'
-import axios from 'axios'
-import { useContext } from 'react';
+import { useState, useEffect,useContext } from 'react'
+import Popup from 'reactjs-popup'
+import { CircularProgress } from '@mui/material'
 import {userContext} from '../../../../../App.jsx'
+import axios from 'axios';
 
 
 function Edit_Faculty_Details(props) 
 {
-
-    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
-
     const location=useLocation()
     const Faculty_details = location.state.Faculty 
+
+    const [userEmail,userType] = useContext(userContext);
+    
     const Faculty_id = {id:Faculty_details._id}
 
     const [Faculty_email,set_Faculty_email] = useState(Faculty_details.email)
     const [Faculty_name,set_Faculty_name]=useState(Faculty_details.name)
     const [Faculty_TAs_Req,set_TAs_Req]=useState("")
     const [Faculty_dept,set_dept]=useState("")
-    const [dummy,set_dummy]=useState("")
     const [all_courses,set_all_courses]=useState([])
     const [Faculty_image_url,set_image_url] = useState("")
     const [Faculty_phone_num,set_phone_num]=useState("")
@@ -31,51 +31,50 @@ function Edit_Faculty_Details(props)
     const [TA_Names,set_TA_Names]=useState(["","","","",""])
     var arr=[]
     var arr2=[]
-
-    const [Message,setmessage] = useState("")
-    const [show,setshow] = useState(false)
-    const [update,set_update]=useState(false)
     const pattern = new RegExp("[6,7,8,9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]") 
+
+    /* The JWT refresh token update is not reflected in the '.then' block of the previous request where the refresh token was updated, 
+    so this variable stores if update is needed and calls the fetch_details function when needed */
+    const [update,setUpdate] = useState(0)
 
     const [Faculty,Set_Faculty] = useState(
     {
-        Faculty_email_new:"",
-        Faculty_name_new:"",
-        Faculty_phone_num_new:"",
-        Faculty_image_url_new:"",
-        Faculty_TAs_Req_new:"",
-        Faculty_dept_new:"",
+        faculty_email_new:"",
+        faculty_name_new:"",
+        faculty_phone_num_new:"",
+        faculty_image_url_new:"",
+        faculty_TAs_Req_new:"",
         course_num:1,
         courses:[""]
     })
-    const [axios_call_count,set_call_count]=useState(0)
+    
+     //Loading Screen
+     const [loadingPopup,setLoadingPopup] = useState(false)
+
+     //Popup
+     const [popup,setPopup] = useState(false);
+     const [success,setSuccess] = useState(0);
+     const [popupMessage,setPopupMessage] = useState(null);
 
 
-
-    if(axios_call_count==0||update==false)
+     const fetch_details = async () =>
     {
-      axiosJWT.post("http://localhost:9000/Faculty_Profile",Faculty_id, {headers:{'authorization':"Bearer "+userAccessToken}}).then(
-        res => {
-                  set_call_count(1)
-                  set_update(true)
-                  res.data.found ? Set_details(res) : set_dummy()
-               })
-      axiosJWT.get(`http://localhost:9000/fetch_TAs_email_array?emails=${Faculty_details.TA_Emails}`, {headers:{'authorization':"Bearer "+userAccessToken}}).then(response=>{set_details_2(response,Faculty_details.TA_Emails)})
-      axiosJWT.get("http://localhost:9000/fetch_courses", {headers:{"authorization":"Bearer "+userAccessToken}}).then(res=>{set_all_courses(res.data)}) 
-       function Set_details(res)
-       {
-         set_Faculty_email(res.data.email)
-         set_Faculty_name(res.data.name)
-         set_TAs_Req(res.data.TAs_Req)
-         set_phone_num(res.data.phone_num)
-         set_image_url(res.data.image_url)
-         set_dept(res.data.dept)
-         set_courses(res.data.courses)
-         set_TA_Emails(res.data.TA_Emails)
-         
-       }
-       function set_details_2(res,emails)
-       {
+        setLoadingPopup(true);
+        await axios.post("http://localhost:9000/Faculty_Profile",Faculty_id, { withCredentials: true }).then(res => 
+        {
+            set_Faculty_email(res.data.email)
+            set_Faculty_name(res.data.name)
+            set_TAs_Req(res.data.TAs_Req)
+            set_phone_num(res.data.phone_num)
+            set_image_url(res.data.image_url)
+            set_dept(res.data.dept)
+            set_courses(res.data.courses)
+            set_TA_Emails(res.data.TA_Emails)
+        })
+        await axios.get(`http://localhost:9000/fetch_TAs_email_array?emails=${Faculty_details.TA_Emails}`, { withCredentials: true }).then(response=>{set_details_2(response,Faculty_details.TA_Emails)})
+        await axios.get("http://localhost:9000/fetch_courses", { withCredentials: true }).then(res=>{set_all_courses(res.data.courses)}) 
+        function set_details_2(res,emails)
+        {
            for(var i=0;i<emails.filter(email => email!="").length;i++)
            {
                for(var j=0;j<emails.filter(email => email!="").length;j++)
@@ -90,14 +89,22 @@ function Edit_Faculty_Details(props)
            {
                return [e, TA_Names[i]];
            })
-       }
-
- 
+        }
+        setUpdate(0);
+        setLoadingPopup(false);
     }
 
+    useEffect(() =>
+    {
+        fetch_details()
+    },[])
 
-    
-    
+    useEffect(() =>
+    {
+      if(update==1)
+        fetch_details();
+    },[update])
+
     function Arrays_Mapper()
     {
         
@@ -107,6 +114,7 @@ function Edit_Faculty_Details(props)
         })
         
     } 
+    
     
 
     const ArrMapper = () =>
@@ -128,9 +136,7 @@ function Edit_Faculty_Details(props)
 
     const HandleChange  = e =>  /*When someone types, its an 'event', denoted and saved in 'e' here. e.target will return where and what the change was*/
     {    
-        setshow(false)
-        setmessage("")
-        const {name,value} = e.target
+        const {name,value} = e.target;
         if(Number(name))
         {
             Faculty.courses[name-1]=value
@@ -143,7 +149,6 @@ function Edit_Faculty_Details(props)
                 
             })
         }
-
         if(name=="course_num")
         {      
             ArrMapper();
@@ -153,41 +158,47 @@ function Edit_Faculty_Details(props)
 
     const Save_Changes = () =>
     {
-        set_update(false)
-        setshow(true)
-        const {email,Faculty_email_new,Faculty_name_new,Faculty_phone_num_new,Faculty_TAs_Req_new,Faculty_image_url_new,courses} = Faculty
+        const {email,faculty_email_new,faculty_name_new,faculty_phone_num_new,faculty_TAs_Req_new,faculty_image_url_new,courses} = Faculty
         Faculty.email = Faculty_details.email
-        if(!Faculty_email_new&&!Faculty_name_new&&!Faculty_phone_num_new&&!Faculty_image_url_new&&!Faculty_TAs_Req_new&&!courses[0])
+        if(!faculty_email_new&&!faculty_name_new&&!faculty_phone_num_new&&!faculty_image_url_new&&!faculty_TAs_Req_new&&!courses[0])
         {
-            setmessage("Please enter new data")
+            setPopupMessage("Please enter new data");
+            setPopup(true);
         }
-        else if(!Faculty_email_new.endsWith("@pilani.bits-pilani.ac.in")&&Faculty_email_new)
+        else if(!faculty_email_new.endsWith("@pilani.bits-pilani.ac.in")&&faculty_email_new)
         {
-            setmessage("Please enter a valid BITS ID")
+            setPopupMessage("Please enter a valid BITS ID");
+            setPopup(true);
         }
-        else if(Faculty_name_new==Faculty_name&&Faculty_name_new)
+        else if(faculty_name_new==Faculty_name&&faculty_name_new)
         {
-            setmessage("Entered name matches the existing one.")
+            setPopupMessage("Entered name matches the existing one.");
+            setPopup(true);
         }
-        else if(Faculty_email_new==Faculty_email&&Faculty_email_new)
+        else if(faculty_email_new==Faculty_email&&faculty_email_new)
         {
-            setmessage("Entered email matches the existing one.")
+            setPopupMessage("Entered email matches the existing one.");
+            setPopup(true);
         }
-        else if(Faculty_phone_num_new==Faculty_phone_num&&Faculty_phone_num_new)
+        else if(faculty_phone_num_new==Faculty_phone_num&&faculty_phone_num_new)
         {
-            setmessage("Entered phone number matches the existing one.")
+            setPopupMessage("Entered phone number matches the existing one.");
+            setPopup(true);
         }
-        else if(Faculty_image_url==Faculty_image_url_new&&Faculty_image_url_new)
+        else if(Faculty_image_url==faculty_image_url_new&&faculty_image_url_new)
         {
-            setmessage("Entered image URL matches the existing one.")
+            setPopupMessage("Entered image URL matches the existing one.");
+            setPopup(true);
         }
-        else if(!pattern.test(Faculty_phone_num_new)&&Faculty_phone_num_new)
+        else if(!pattern.test(faculty_phone_num_new)&&faculty_phone_num_new)
         {
-            setmessage("Please enter a valid phone number")
+            setPopupMessage("Please enter a valid phone number");
+            setPopup(true);
         }
-        else if(Faculty_TAs_Req_new&&(isNaN(Faculty_TAs_Req_new)||Faculty_TAs_Req<-1)) 
+        else if(faculty_TAs_Req_new&&(isNaN(faculty_TAs_Req_new)||Faculty_TAs_Req<-1)) 
         {
-            setmessage("Please enter a valid TA Requirement")
+            setPopupMessage("Please enter a valid TA Requirement");
+            setPopup(true);
         }
         else
         {
@@ -206,31 +217,43 @@ function Edit_Faculty_Details(props)
             }
             if(courses[0]&&all_courses_flag==1)
             {
-                setmessage("Please enter all courses")
+
+                setPopupMessage("Please enter all courses");
+                setPopup(true);
             }
             else if(courses[0]&&duplicate_courses_flag==1)
             {  
-                setmessage("Courses must be different")
+                setPopupMessage("Courses must be different");
+                setPopup(true);
             }
             else
             {
-                axiosJWT.put("http://localhost:9000/Update_Faculty_Profile", Faculty, {headers:{'authorization':"Bearer "+userAccessToken}})
-                .then( res=> {setmessage(res.data.message)})
+                setLoadingPopup(true);
+                axios.put("http://localhost:9000/Update_Faculty_Profile", Faculty, { withCredentials: true })
+                .then( res=> 
+                    {
+                        setLoadingPopup(false);
+                        setSuccess(res.data.success);
+                        setPopupMessage(res.data.message);
+                        setPopup(true);
+                        Faculty.faculty_email_new="";
+                        Faculty.faculty_name_new="";
+                        Faculty.faculty_phone_num_new="";
+                        Faculty.faculty_image_url_new="";
+                        Faculty.faculty_TAs_Req_new="";
+                        Faculty.course_num=1;
+                        Faculty.courses=[""];
+                        setUpdate(1);
+                    })
             }
         }
 
     }
 
     function render_course_options(courses)
-    {
-       
-            return (
-                courses && courses.map((el) => (<option value={el.code}>{el.name}</option>))
-            )
-        
+    {    
+        return ( courses && courses.map((el) => (<option value={el.code}>{el.name}</option>)) )
     }
-
-
 
     return(
         <div>
@@ -242,17 +265,17 @@ function Edit_Faculty_Details(props)
                 <img src={Faculty_image_url} height="200" max-width="650"/>
                 <div className='details'>                
                   <br/>
-                  <h3>Name &emsp;: &emsp;{Faculty_name} <br/><input name="Faculty_name_new" type="text" placeholder="Enter New Name" className='details_input' onChange={HandleChange} value={Faculty.Faculty_name_new}/></h3>
+                  <h3>Name &emsp;: &emsp;{Faculty_name} <br/><input name="faculty_name_new" type="text" placeholder="Enter New Name" className='details_input' onChange={HandleChange} value={Faculty.faculty_name_new}/></h3>
                   <br/>
-                  <h3>Email &emsp;: &emsp;{Faculty_email} <br/><input name="Faculty_email_new" type="text" placeholder="Enter New Email" className='details_input' onChange={HandleChange} value={Faculty.Faculty_email_new}/></h3>
+                  <h3>Email &emsp;: &emsp;{Faculty_email} <br/><input name="faculty_email_new" type="text" placeholder="Enter New Email" className='details_input' onChange={HandleChange} value={Faculty.faculty_email_new}/></h3>
                   <br/>
-                  <h3>Image URL &emsp;: <br/><input name="Faculty_image_url_new" type="text" placeholder="Enter Profile Image URL" className='details_input' onChange={HandleChange} value={Faculty.Faculty_image_url_new}/></h3>
+                  <h3>Image URL &emsp;: <br/><input name="faculty_image_url_new" type="text" placeholder="Enter Profile Image URL" className='details_input' onChange={HandleChange} value={Faculty.faculty_image_url_new}/></h3>
                   <br/>
-                  <h3>Phone Number &emsp;: &emsp;{Faculty_phone_num}<br/><input name="Faculty_phone_num_new" type="text" placeholder="Enter New Phone Number" className='details_input' onChange={HandleChange} value={Faculty.Faculty_phone_num_new}/></h3>
+                  <h3>Phone Number &emsp;: &emsp;{Faculty_phone_num}<br/><input name="faculty_phone_num_new" type="text" placeholder="Enter New Phone Number" className='details_input' onChange={HandleChange} value={Faculty.faculty_phone_num_new}/></h3>
                   <br/>
                   <h3>Department &emsp;: &emsp;{Faculty_dept}</h3>
                   <br/>
-                  <h3>TAs Required &emsp;: &emsp;{Faculty_TAs_Req==-1?"NA":Faculty_TAs_Req}<br/><input name="Faculty_TAs_Req_new" type="Number" placeholder="Enter TAs Required" className='details_input' onChange={HandleChange} value={Faculty.Faculty_TAs_Req_new}/></h3>
+                  <h3>TAs Required &emsp;: &emsp;{Faculty_TAs_Req==-1?"NA":Faculty_TAs_Req}<br/><input name="faculty_TAs_Req_new" type="Number" placeholder="Enter TAs Required" className='details_input' onChange={HandleChange} value={Faculty.faculty_TAs_Req_new}/></h3>
                   <br/>
                   <h2>Course(s) Offered Currently&emsp;:- &emsp;</h2>{courses.filter(course => course!="").map((course)=>(<h3>{course}</h3>))}<br/>
                   <h3>EDIT :-</h3>
@@ -295,11 +318,29 @@ function Edit_Faculty_Details(props)
                     }
                   <br/>
                 </div>
-                <div className="ErrorMsg">{show && Message!=="Profile Updated Successfully." ? Message : ""}</div>
-                <div className="SuccessMsg">{show && Message=="Profile Updated Successfully." ? Message : ""}</div>
                 <div className='btn' onClick={Save_Changes}>Save</div>
                 </center>
               </div>
+              {/* LOADING SCREEN */}
+              <Popup open={loadingPopup} hideBackdrop closeOnDocumentClick={false} onClose={()=>{setLoadingPopup(false)}}>
+                   <center>
+                     <p style={{color:"#003C71", fontSize:"130%", margin:"3%"}}><center>PLEASE WAIT...</center></p>
+                     <br/>
+                     <CircularProgress/>
+                     <br/>
+                     <br/>
+                   </center>
+              </Popup> 
+              <Popup open = {popup} closeOnDocumentClick  onClose={()=>{setPopup(false);setSuccess(0);}}>
+              <center> 
+                  <br/>
+                  <center><div className={success==1 ? 'SuccessMsg' : 'ErrorMsg'}>{popupMessage}</div></center>
+                  <br/>
+                  <div className='export_btn' onClick={()=>{setPopup(false);setSuccess(0)}}>Ok</div>
+                  <br/>
+                  <br/>
+                </center>
+              </Popup>
         </div>
   
   )

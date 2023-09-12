@@ -11,7 +11,7 @@ import {userContext} from '../App.jsx'
 const View_Tasks = (props) => 
 {
 
-    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+    const [userEmail,userType] = useContext(userContext);
    
     const location=useLocation()
     const course = location.state.course
@@ -23,21 +23,21 @@ const View_Tasks = (props) =>
     {
         const fetch_TAs = async () =>
         {
-            const result2 = await axiosJWT.get(`http://localhost:9000/fetch_TAs_by_course_faculty?Faculty_Email=${props.email}&Course_Code=${course.code}`, {headers:{'authorization':"Bearer "+userAccessToken}})
+            const result2 = await axios.get(`http://localhost:9000/fetch_TAs_by_course_faculty?Faculty_Email=${props.email}&Course_Code=${course.code}`)
             set_TAs(result2.data)
         }
         fetch_TAs()
 
         const fetch_incomplete_tasks = async () =>
         {
-            const data= await axiosJWT.get(`http://localhost:9000/fetch_incomplete_tasks?fac_email=${props.email}&course_code=${course.code}`, {headers:{'authorization':"Bearer "+userAccessToken}})
+            const data= await axios.get(`http://localhost:9000/fetch_incomplete_tasks?fac_email=${props.email}&course_code=${course.code}`)
             set_incomplete_tasks(data)
         }
         fetch_incomplete_tasks();
 
         const fetch_completed_tasks = async () =>
         {
-            const data= await axiosJWT.get(`http://localhost:9000/fetch_completed_tasks?fac_email=${props.email}&course_code=${course.code}`, {headers:{'authorization':"Bearer "+userAccessToken}})
+            const data= await axios.get(`http://localhost:9000/fetch_completed_tasks?fac_email=${props.email}&course_code=${course.code}`)
             set_completed_tasks(data)
         }
         fetch_completed_tasks();

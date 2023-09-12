@@ -1,74 +1,105 @@
 import React,{useEffect, useState} from 'react'
 import Header from '../../../Header/header.jsx'
 import './Apply.css'
-import axios from 'axios'
-import {TA} from '../../../Classes/Users.tsx'
+import Popup from 'reactjs-popup'
+import { CircularProgress } from '@mui/material'
 import { useContext } from 'react';
 import {userContext} from '../../../App.jsx'
+import axios from 'axios';
 
 const Apply = (props) => 
 {
-    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
+        const [userEmail,userType] = useContext(userContext);
    
         const [Status,set_status] = useState()
-        const [Message,setmessage] = useState("")
         const [user,set_user] = useState({
             course1:"",
             course2:"",
             course3:""
         })
-        const [show,setshow] = useState(false)
-        const [courses,set_courses] = useState()
-        const [flag,set_flag]=useState(0);
-        
+        const [courses,set_courses] = useState([]);
         const [fac,set_fac] = useState({name:""})
-
-
         const [choices_temp,Set_choices_temp] = useState({
             course1:"",
             course2:"",
             course3:""
         })
 
+        /* The JWT refresh token update is not reflected in the '.then' block of the previous request where the refresh token was updated, 
+        so this variable stores if update is needed and calls the fetch_details function when needed */
+        const [update,setUpdate] = useState(0)
+
+        //Loading Screen
+        const [loadingPopup,setLoadingPopup] = useState(false);
+        //Popup
+        const [popup,setPopup] = useState(false);
+        const [success,setSuccess] = useState(0);
+        const [popupMessage,setPopupMessage] = useState(null);
+
+        const fetch_courses = async () =>
+        {
+            await axios.get("http://localhost:9000/fetch_courses", { withCredentials: true }).then(res=>
+            {
+                setSuccess(res.data.success);
+                if(res.data.success==1)
+                {
+                    set_courses(res.data.courses);
+                }
+                else
+                {
+                    setPopupMessage(res.data.message);
+                    setPopup(true);
+                }
+            }) 
+        }  
+        const fetch_user = async () =>
+        {
+            await axios.get(`http://localhost:9000/fetch_TA_by_email?email=${props.user_email}`, { withCredentials: true }).then(async(res)=>
+            {
+                if(res.data.success==1)
+                {
+                    set_user(res.data.TA)
+                    set_status(res.data.TA.Application_Status)
+                    await axios.get(`http://localhost:9000/fetch_faculty_by_email?email=${res.data.TA.Faculty_Email}`, { withCredentials: true }).then(res=>
+                    {
+                        if(res.data.success==1)
+                        {
+                            set_fac(res.data.Faculty);
+                        }
+                        else
+                        {
+                            setPopupMessage(res.data.message);
+                            setPopup(true);
+                        }   
+                    })
+                }
+                else
+                {
+                    setPopupMessage(res.data.message);
+                    setPopup(true);
+                }     
+            })    
+            setUpdate(0);
+        }  
+
         useEffect(() => 
         {
-            const fetch_courses = async () =>
-            {
-                const result= await axiosJWT.get("http://localhost:9000/fetch_courses", {headers:{'authorization':"Bearer "+userAccessToken}})
-                set_courses(result)
-            }
             fetch_courses();
-            const fetch_user = async () =>
-            {
-                const result2 = await axiosJWT.get(`http://localhost:9000/fetch_TA_by_email?email=${props.user_email}`, {headers:{'authorization':"Bearer "+userAccessToken}})
-                set_user(result2.data)
-                set_status(result2.data.Application_Status)
-                set_flag(1)
-            }
-            fetch_user();
-               
-            
-            
-        
+            fetch_user();   
+            setSuccess(0);     
         },[])
 
-        if(flag==1)
+        useEffect(() => 
         {
-            const fetch_faculty = async () =>
+            if(update==1)
             {
-                const result3 = await axiosJWT.get(`http://localhost:9000/fetch_faculty_by_email?email=${user.Faculty_Email}`, {headers:{'authorization':"Bearer "+userAccessToken}})
-                set_fac(result3.data)
-                set_flag(0);
-            }
-            fetch_faculty()
-        }
-
+                fetch_courses();
+                fetch_user(); 
+            }        
+        },[update])
         
-
         const HandleChange  = e =>  /*When someone types, its an 'event', denoted and saved in 'e' here. e.target will return where and what the change was*/
         {    
-            setshow(false)
-            setmessage("")
             const {name,value} = e.target
             Set_choices_temp({
                 ...choices_temp, /* Stores the value entered by the user in the respective state variable while the rest remain as their default values ("" in this case)*/
@@ -80,26 +111,29 @@ const Apply = (props) =>
 
         const Save_Changes = async() =>
         {
-            setshow(true)
             if(!choices_temp.course1)
             {
-                setmessage("Please choose course 1")
+                setPopupMessage("Please choose course 1");
+                setPopup(true);
             } 
             else if(!choices_temp.course2)
             {
-                setmessage("Please choose course 2")
+                setPopupMessage("Please choose course 2");
+                setPopup(true);
             } 
             else if(!choices_temp.course3)
             {
-                setmessage("Please choose course 3")
+                setPopupMessage("Please choose course 3");
+                setPopup(true);
             } 
             else if(choices_temp.course1==choices_temp.course2||choices_temp.course1==choices_temp.course3||choices_temp.course2==choices_temp.course3)
             {
-                setmessage("Courses must be different")
+                setPopupMessage("Courses must be different");
+                setPopup(true);
             }
             else
             {
-                set_status("Applied")
+                setLoadingPopup(true);
                 const details = {
                     Email:props.user_email,
                     course1:choices_temp.course1,
@@ -107,12 +141,18 @@ const Apply = (props) =>
                     course3:choices_temp.course3,
                     Application_Status:"Applied"
                 }
-                const response = await axiosJWT.post("http://localhost:9000/Set_choices", details, {headers:{'authorization':"Bearer "+userAccessToken}})
-                setmessage(response.data.message)  
-
-                const result2 = await axiosJWT.get(`http://localhost:9000/fetch_TA_by_email?email=${props.user_email}`, {headers:{'authorization':"Bearer "+userAccessToken}})
-                set_user(result2.data)
-
+                await axios.post("http://localhost:9000/Set_choices", details, { withCredentials: true }).then(res=>
+                {
+                    if(res.data.success==1)
+                    {
+                        set_status("Applied");
+                    }
+                    setLoadingPopup(false);
+                    setSuccess(res.data.success);
+                    setPopupMessage(res.data.message);
+                    setPopup(true);
+                    setUpdate(1);
+                })
             }
         } 
 
@@ -138,10 +178,14 @@ const Apply = (props) =>
                                 <select name="course1" className='details_input' onChange={HandleChange} value={choices_temp.course1}>
                                     <option value=""></option>
                                         {
-                                            courses && courses.data.map((el) => 
+                                            courses.length>0 
+                                            ? 
+                                            courses.map((el) => 
                                             (
                                                 <option value={el.code}>{el.name}</option>
                                             ))
+                                            :
+                                            ""
                                             
                                         }
                                 </select>
@@ -151,10 +195,14 @@ const Apply = (props) =>
                                 <select name="course2" className='details_input' onChange={HandleChange} value={choices_temp.course2}>
                                     <option value=""></option>
                                         {
-                                            courses && courses.data.map((el) => 
+                                            courses.length>0 
+                                            ? 
+                                            courses.map((el) => 
                                             (
                                                 <option value={el.code}>{el.name}</option>
                                             ))
+                                            :
+                                            ""
                                             
                                         }
                                 </select>
@@ -164,10 +212,14 @@ const Apply = (props) =>
                                 <select name="course3" className='details_input' onChange={HandleChange} value={choices_temp.course3}>
                                     <option value=""></option>
                                         {
-                                            courses && courses.data.map((el) => 
+                                            courses.length>0
+                                            ?
+                                            courses.map((el) => 
                                             (
                                                 <option value={el.code}>{el.name}</option>
                                             ))
+                                            :
+                                            ""
                                             
                                         }
                                 </select>
@@ -189,11 +241,29 @@ const Apply = (props) =>
                         </div>
 
                     }
-                    <div className="ErrorMsg">{show && Message!=="Application Successful" ? Message : ""}</div>
-                    <div className="SuccessMsg">{show && Message=="Application Successful" ? Message : ""}</div>
                     <div className={Status=="Yet to Apply" ? 'btn' : 'ncbtn'} onClick={Status=="Yet to Apply" ? Save_Changes : null}>APPLY</div>
                     <br/>
                     <br/>
+                    {/* LOADING SCREEN */}
+                    <Popup open={loadingPopup} hideBackdrop closeOnDocumentClick={false} onClose={()=>{setLoadingPopup(false)}}>
+                         <center>
+                           <p style={{color:"#003C71", fontSize:"130%", margin:"3%"}}><center>PLEASE WAIT...</center></p>
+                           <br/>
+                           <CircularProgress/>
+                           <br/>
+                           <br/>
+                         </center>
+                    </Popup> 
+                    <Popup open = {popup} closeOnDocumentClick  onClose={()=>{setPopup(false);setSuccess(0);}}>
+                    <center> 
+                        <br/>
+                        <center><div className={success==1 ? 'SuccessMsg' : 'ErrorMsg'}>{popupMessage}</div></center>
+                        <br/>
+                        <div className='export_btn' onClick={()=>{setPopup(false);setSuccess(0)}}>Ok</div>
+                        <br/>
+                        <br/>
+                      </center>
+                    </Popup>
                     </center>
               </div>
             </div>

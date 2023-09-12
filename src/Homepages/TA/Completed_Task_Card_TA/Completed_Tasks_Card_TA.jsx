@@ -1,6 +1,5 @@
 import React,{useState,useEffect} from 'react'
 import './Completed_Tasks_Card_TA.css'
-import axios from 'axios'
 import { format, parseISO } from 'date-fns';
 
 const Completed_Tasks_Card = (props) => {
@@ -18,7 +17,6 @@ const Completed_Tasks_Card = (props) => {
             {
                 set_rating(completed_task.Rating[i])
                 set_comments(completed_task.Comments[i])
-
             }
         }
     },[])

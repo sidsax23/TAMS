@@ -1,11 +1,11 @@
-import React from 'react'
 import './Edit_Course_Details.css'
 import Header from '../../../../../Header/header.jsx'
 import { useLocation } from 'react-router-dom'
-import { useState } from 'react'
-import axios from 'axios'
-import { useContext, useEffect} from 'react';
+import Popup from 'reactjs-popup'
+import { CircularProgress } from '@mui/material'
+import { useState, useContext, useEffect} from 'react';
 import {userContext} from '../../../../../App.jsx'
+import axios from 'axios';
 
 
 function Edit_Course_Details(props) 
@@ -13,28 +13,36 @@ function Edit_Course_Details(props)
     const location=useLocation()
     const Course_details = location.state.Course
 
-    const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
-   
+    const [userEmail,userType] = useContext(userContext);
 
     const [Course_code,set_Course_code] = useState(Course_details.code)
     const [Course_name,set_Course_name]=useState(Course_details.name)
-
-    const [Message,setmessage] = useState("")
-    const [show,setshow] = useState(false)
     const pattern = new RegExp("[6,7,8,9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]") 
 
+    /* The JWT refresh token update is not reflected in the '.then' block of the previous request where the refresh token was updated, 
+    so this variable stores if update is needed and calls the fetch_details function when needed */
+    const [update,setUpdate] = useState(0)
+    
     const [Course,SetCourse] = useState(
     {
-        Course_code_new:"",
-        Course_name_new:""
+      Course_code_new:"",
+      Course_name_new:""
     })
+
+    //Loading Screen
+    const [loadingPopup,setLoadingPopup] = useState(false)
+    //Popup
+    const [popup,setPopup] = useState(false);
+    const [success,setSuccess] = useState(0);
+    const [popupMessage,setPopupMessage] = useState(null);
 
     const fetch_details = async () =>
     {
-      axiosJWT.get(`http://localhost:9000/fetch_course?courseId=${Course_details._id}`, {headers:{'authorization':"Bearer "+userAccessToken}}).then(
+      axios.get(`http://localhost:9000/fetch_course?courseId=${Course_details._id}`, { withCredentials: true }).then(
         res => {
                   set_Course_code(res.data.code);
                   set_Course_name(res.data.name);
+                  setUpdate(0);
                })
     }
 
@@ -44,12 +52,16 @@ function Edit_Course_Details(props)
 
     },[])
 
+    useEffect(() =>
+    {
+      if(update==1)
+        fetch_details();
+    },[update])
+
     
 
     const HandleChange  = e =>  /*When someone types, its an 'event', denoted and saved in 'e' here. e.target will return where and what the change was*/
     {    
-        setshow(false)
-        setmessage("")
         const {name,value} = e.target
         SetCourse({
             ...Course, /* Stores the value entered by the TA in the respective state variable while the rest remain as their default values ("" in this case)*/
@@ -57,42 +69,45 @@ function Edit_Course_Details(props)
         })
     }
 
-    const Save_Changes = () =>
+    const Save_Changes = async () =>
     {
-        setshow(true)
-        const {Course_code_new,Course_name_new} = Course
+        const {Course_code_new,Course_name_new} = Course;
         if(!Course_code_new&&!Course_name_new)
         {
-            setmessage("Please enter new data")
+            setPopupMessage("Please enter new data");
+            setPopup(true);
         }
         else if(Course_name_new==Course_name&&Course_name_new)
         {
-            setmessage("Entered course name matches the existing one.")
+            setPopupMessage("Entered course name matches the existing one.");
+            setPopup(true);
         }
         else if(Course_code_new==Course_code&&Course_code_new)
         {
-            setmessage("Entered course code matches the existing one.")
+            setPopupMessage("Entered course code matches the existing one.");
+            setPopup(true);
         }
         else
         {
+            setLoadingPopup(true);
             const courseDetails = 
             {
               courseCode:Course_code,
               Course_name_new:Course_name_new,
               Course_code_new:Course_code_new
             }
-            axiosJWT.put("http://localhost:9000/Update_Course_Details", courseDetails, {headers:{'authorization':"Bearer "+userAccessToken}})
+            await axios.put("http://localhost:9000/Update_Course_Details", courseDetails, { withCredentials: true })
             .then( res=> {
-                            setmessage(res.data.message);
+                            setLoadingPopup(false);
+                            setSuccess(res.data.success)
+                            setPopupMessage(res.data.message);
+                            setPopup(true);
                             Course.Course_code_new="";
                             Course.Course_name_new="";
-                            fetch_details();
+                            setUpdate(1);
                          })
         }
-
     }
-
-
 
     return(
         <div>
@@ -108,11 +123,29 @@ function Edit_Course_Details(props)
                   <h3>Course Code &emsp;: &emsp;{Course_code} <br/><input name="Course_code_new" type="text" placeholder="Enter New Course Code" className='details_input' onChange={HandleChange} value={Course.Course_code_new}/></h3>
                   <br/>
                 </div>
-                <div className="ErrorMsg">{show && Message!=="Course Updated Successfully." ? Message : ""}</div>
-                <div className="SuccessMsg">{show && Message=="Course Updated Successfully." ? Message : ""}</div>
                 <div className='btn' onClick={Save_Changes}>Save</div>
                 </center>
               </div>
+              {/* LOADING SCREEN */}
+              <Popup open={loadingPopup} hideBackdrop closeOnDocumentClick={false} onClose={()=>{setLoadingPopup(false)}}>
+                   <center>
+                     <p style={{color:"#003C71", fontSize:"130%", margin:"3%"}}><center>PLEASE WAIT...</center></p>
+                     <br/>
+                     <CircularProgress/>
+                     <br/>
+                     <br/>
+                   </center>
+              </Popup> 
+              <Popup open = {popup} closeOnDocumentClick  onClose={()=>{setPopup(false);setSuccess(0);}}>
+              <center> 
+                  <br/>
+                  <center><div className={success==1 ? 'SuccessMsg' : 'ErrorMsg'}>{popupMessage}</div></center>
+                  <br/>
+                  <div className='export_btn' onClick={()=>{setPopup(false);setSuccess(0)}}>Ok</div>
+                  <br/>
+                  <br/>
+                </center>
+              </Popup>
         </div>
   
   )

@@ -3,17 +3,21 @@ import Header from '../../../Header/header.jsx'
 import './View_Edit_Tasks.css'
 import DataTable from 'react-data-table-component'
 import { Link, useLocation } from 'react-router-dom'
-import axios from 'axios'
+import { CircularProgress } from '@mui/material'
 import { CSVLink } from 'react-csv'
 import Popup from 'reactjs-popup'
 import 'reactjs-popup/dist/index.css' 
 import { useContext } from 'react';
 import {userContext} from '../../../App.jsx'
+import axios from 'axios';
 
-const View_Edit_Tasks = (props) => {
+const View_Edit_Tasks = (props) => 
+{
 
-  const [userEmail,setUserEmail,userType,setUserType,userAccessToken,setUserAccessToken,userRefreshToken,setUserRefreshToken,axiosJWT] = useContext(userContext);
-   
+  const [userEmail,userType] = useContext(userContext);
+  
+  const [tKey,setTKey] = useState(0);
+
   const [tasks,set_tasks] = useState([])
   const [selected_data,set_selected_data] = useState([])
   const [filtered_tasks,set_filtered_tasks] = useState([])
@@ -27,17 +31,26 @@ const View_Edit_Tasks = (props) => {
   const location=useLocation()
   const course = location.state.course
 
+  //Loading Screen
+  const [loadingPopup,setLoadingPopup] = useState(false);
+
+  /* The JWT refresh token update is not reflected in the '.then' block of the previous request where the refresh token was updated, 
+  so this variable stores if update is needed and calls the fetch_details function when needed */
+  const [update,setUpdate] = useState(0);
+
   const get_tasks = async() =>
   {
     try 
     {
-      const response = await axiosJWT.get(`http://localhost:9000/fetch_tasks?fac_email=${props.email}&course_code=${course.code}`, {headers:{'authorization':"Bearer "+userAccessToken}})
+      const response = await axios.get(`http://localhost:9000/fetch_tasks?fac_email=${props.email}&course_code=${course.code}`, { withCredentials: true })
       set_tasks(response.data)
       set_filtered_tasks(response.data)
+      setUpdate(0);
     } 
     catch (error) 
     {
-      console.log(error)      
+      console.log(error)    
+      setUpdate(0);  
     }
 
   }
@@ -49,6 +62,12 @@ const View_Edit_Tasks = (props) => {
       
   }, [])
 
+  useEffect(() =>
+  {
+    if(update==1)
+      get_tasks();
+  },[update])
+
   useEffect(() => 
   {
     const result = tasks.filter( (task) => {
@@ -56,7 +75,7 @@ const View_Edit_Tasks = (props) => {
       return task.Name.toLowerCase().match(search.toLowerCase())
 
     })
-    set_filtered_tasks(result)
+    set_filtered_tasks(result);
 
   },[search])
 
@@ -177,6 +196,7 @@ const View_Edit_Tasks = (props) => {
   //DELETION
   const delete_records = () =>
   {
+    setLoadingPopup(true);
     const task_Details = {
       ids:[]
     }
@@ -185,18 +205,21 @@ const View_Edit_Tasks = (props) => {
       task_Details.ids.push(selected_data[i]._id)
     }
     
-    axiosJWT.delete(`http://localhost:9000/Delete_Tasks?id=${task_Details.ids}`, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
+    axios.delete(`http://localhost:9000/Delete_Tasks?ids=${task_Details.ids}`, { withCredentials: true }).then( (res) =>
     {
       set_inner_popup1_message(res.data)
       set_popup1(false)
       set_inner_popup1(true)
-      get_tasks()
+      setUpdate(1);
+      setTKey(tKey+1);
+      setLoadingPopup(false);
     })
   }
 
    //Reset Tasks
    const reset_records = () =>
   {
+    setLoadingPopup(true);
     const task_Details = {
       ids:[],
     }
@@ -206,12 +229,14 @@ const View_Edit_Tasks = (props) => {
       task_Details.ids.push(selected_data[i]._id)
     }
     
-    axiosJWT.put("http://localhost:9000/Reset_Tasks", task_Details, {headers:{'authorization':"Bearer "+userAccessToken}}).then( (res) =>
+    axios.put("http://localhost:9000/Reset_Tasks", task_Details, { withCredentials: true }).then( (res) =>
     {
       set_inner_popup2_message(res.data)
       set_popup2(false)
       set_inner_popup2(true)
-      get_tasks()
+      setUpdate(1);
+      setTKey(tKey+1);
+      setLoadingPopup(false);
     })
   }
 
@@ -297,6 +322,7 @@ const View_Edit_Tasks = (props) => {
           <h1>TASK LIST</h1>
           <br/>
           <DataTable 
+            key={tKey} //This is changed after every reset or deletion to ensure that the table is reset
             columns={columns} 
             data={filtered_tasks} 
             fixedHeader 
@@ -356,6 +382,16 @@ const View_Edit_Tasks = (props) => {
               <br/>
             </center>
           </Popup>
+           {/* LOADING SCREEN */}
+          <Popup open={loadingPopup} hideBackdrop closeOnDocumentClick={false} onClose={()=>{setLoadingPopup(false)}}>
+           <center>
+             <p style={{color:"#003C71", fontSize:"130%", margin:"3%"}}><center>PLEASE WAIT...</center></p>
+             <br/>
+             <CircularProgress/>
+             <br/>
+             <br/>
+           </center>
+          </Popup> 
           </center>
           <br/>
       </div>
