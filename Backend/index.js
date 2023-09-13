@@ -22,8 +22,8 @@ app.use(cors({
 app.use(cookieParser())
 app.listen(9000,() => {console.log("Back-end Started at port 9000")})
 
-// Creating DB. Name of DB = Login_pagesDB
-mongoose.connect("mongodb://localhost:27017/TAMS_DB", 
+// Creating DB. Name of DB = TAMS_DB
+mongoose.connect("mongodb://db:27017/TAMS_DB", 
                     {
                         useNewUrlParser: true,
                         useUnifiedTopology : true
